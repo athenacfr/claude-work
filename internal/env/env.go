@@ -47,6 +47,14 @@ func Sync(projectDir string, repoNames []string) error {
 		symlink := filepath.Join(projectDir, filepath.Base(globalFile))
 		// Only recreate if symlink is missing or points to the wrong target
 		if target, err := os.Readlink(symlink); err != nil || target != globalFile {
+			// If the symlink was replaced with a regular file (e.g., editor
+			// save-by-rename), preserve its content into the actual global
+			// file before replacing it with the symlink.
+			if info, statErr := os.Lstat(symlink); statErr == nil && info.Mode().IsRegular() {
+				if content, readErr := os.ReadFile(symlink); readErr == nil && len(content) > 0 {
+					os.WriteFile(globalFile, content, 0644)
+				}
+			}
 			os.Remove(symlink)
 			os.Symlink(globalFile, symlink)
 		}

@@ -121,6 +121,64 @@ func TestSync(t *testing.T) {
 	}
 }
 
+func TestSyncPreservesContentWhenSymlinkReplacedByFile(t *testing.T) {
+	dir := t.TempDir()
+
+	repoDir := filepath.Join(dir, "my-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	// Create global env with initial content
+	envsDir := EnvsDir()
+	os.MkdirAll(envsDir, 0755)
+	globalPath := filepath.Join(envsDir, ".env.my-repo.global")
+	os.WriteFile(globalPath, []byte("OLD_VAR=old\n"), 0644)
+
+	// First sync to create the symlink
+	if err := Sync(dir, []string{"my-repo"}); err != nil {
+		t.Fatalf("initial Sync failed: %v", err)
+	}
+
+	// Simulate editor save-by-rename: replace the symlink with a regular file
+	symlinkPath := filepath.Join(dir, ".env.my-repo.global")
+	os.Remove(symlinkPath)
+	os.WriteFile(symlinkPath, []byte("NEW_VAR=new\nUPDATED=true\n"), 0644)
+
+	// Sync again — should preserve the regular file's content into the global file
+	if err := Sync(dir, []string{"my-repo"}); err != nil {
+		t.Fatalf("second Sync failed: %v", err)
+	}
+
+	// The actual global file should now have the new content
+	data, err := os.ReadFile(globalPath)
+	if err != nil {
+		t.Fatalf("read global file: %v", err)
+	}
+	if got := findLine(string(data), "NEW_VAR"); got != "NEW_VAR=new" {
+		t.Errorf("global file: expected NEW_VAR=new, got %q (content: %q)", got, string(data))
+	}
+	if got := findLine(string(data), "UPDATED"); got != "UPDATED=true" {
+		t.Errorf("global file: expected UPDATED=true, got %q", got)
+	}
+
+	// The symlink should be restored
+	info, err := os.Lstat(symlinkPath)
+	if err != nil {
+		t.Fatalf("expected symlink at %s: %v", symlinkPath, err)
+	}
+	if info.Mode()&os.ModeSymlink == 0 {
+		t.Errorf("expected %s to be a symlink after fix", symlinkPath)
+	}
+
+	// The merged .env should include the new content
+	envData, err := os.ReadFile(filepath.Join(repoDir, ".env"))
+	if err != nil {
+		t.Fatalf("read .env: %v", err)
+	}
+	if got := findLine(string(envData), "NEW_VAR"); got != "NEW_VAR=new" {
+		t.Errorf(".env: expected NEW_VAR=new, got %q", got)
+	}
+}
+
 func findLine(content, key string) string {
 	for _, line := range splitLines(content) {
 		if len(line) > len(key) && line[:len(key)+1] == key+"=" {
