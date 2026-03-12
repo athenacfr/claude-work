@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Prevents writing files directly in the cw project root.
 # Only .gitignore and .env.*.override are allowed in root.
 # .claude/* is managed by cw and also blocked.

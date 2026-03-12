@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -101,6 +102,57 @@ func internalReload() {
 	}
 }
 
+// openFolder opens a directory in the best available editor/file manager.
+// Priority: $VISUAL, $EDITOR, VS Code, then platform file explorer.
+func openFolder(dir string) {
+	// 1. $VISUAL
+	if editor := os.Getenv("VISUAL"); editor != "" {
+		cmd := exec.Command(editor, dir)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			fmt.Fprintf(os.Stderr, "editor exited: %v\n", err)
+		}
+		return
+	}
+
+	// 2. $EDITOR (skip terminal-only editors that can't open folders)
+	if editor := os.Getenv("EDITOR"); editor != "" {
+		base := filepath.Base(editor)
+		switch base {
+		case "vi", "vim", "nvim", "nano", "pico", "emacs", "ed":
+			// skip — these don't open folders well
+		default:
+			cmd := exec.Command(editor, dir)
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
+				fmt.Fprintf(os.Stderr, "editor exited: %v\n", err)
+			}
+			return
+		}
+	}
+
+	// 3. VS Code
+	if path, err := exec.LookPath("code"); err == nil {
+		exec.Command(path, dir).Start()
+		return
+	}
+
+	// 4. Platform file explorer
+	var cmd *exec.Cmd
+	if runtime.GOOS == "darwin" {
+		cmd = exec.Command("open", dir)
+	} else {
+		cmd = exec.Command("xdg-open", dir)
+	}
+	if err := cmd.Start(); err != nil {
+		fmt.Fprintf(os.Stderr, "could not open folder: %v\n", err)
+	}
+}
+
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "uninstall" {
 		uninstall()
@@ -142,22 +194,9 @@ func main() {
 
 		cfg := model.LaunchConfig()
 
-		// Editor mode: open repo folder with $VISUAL/$EDITOR and loop back to TUI
+		// Editor mode: open project folder and loop back to TUI
 		if cfg.EditorMode {
-			editor := os.Getenv("VISUAL")
-			if editor == "" {
-				editor = os.Getenv("EDITOR")
-			}
-			if editor == "" {
-				editor = "vi"
-			}
-			cmd := exec.Command(editor, cfg.WorkDir)
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			if err := cmd.Run(); err != nil {
-				fmt.Fprintf(os.Stderr, "editor exited: %v\n", err)
-			}
+			openFolder(cfg.WorkDir)
 			continue
 		}
 

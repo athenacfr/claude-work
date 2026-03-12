@@ -51,8 +51,15 @@ func EnvsDir() string {
 }
 
 // BinDir returns the directory where the cw binary is installed.
-// Default: ~/.local/bin on all platforms.
+// Override with CW_BIN_DIR env var.
+// Defaults: macOS /usr/local/bin, Linux/WSL ~/.local/bin
 func BinDir() string {
+	if dir := os.Getenv("CW_BIN_DIR"); dir != "" {
+		return dir
+	}
+	if runtime.GOOS == "darwin" {
+		return "/usr/local/bin"
+	}
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".local", "bin")
 }

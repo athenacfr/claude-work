@@ -1,8 +1,8 @@
 package project
 
 import (
+	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/ahtwr/cw/internal/git"
@@ -121,8 +121,32 @@ func RemoveRepo(projectName, repoName string) error {
 }
 
 func CopyDir(src, dest string) error {
-	cmd := exec.Command("cp", "-r", src, dest)
-	return cmd.Run()
+	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		target := filepath.Join(dest, rel)
+
+		if d.IsDir() {
+			return os.MkdirAll(target, 0755)
+		}
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(target, data, info.Mode())
+	})
 }
 
 func MoveDir(src, dest string) error {
