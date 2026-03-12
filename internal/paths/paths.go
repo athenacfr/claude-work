@@ -25,13 +25,13 @@ func DataDir() string {
 
 // ProjectsDir returns the directory where cw projects live.
 // Override with CW_PROJECTS_DIR env var.
-// Default: ~/development/
+// Default: ~/cw/projects
 func ProjectsDir() string {
 	if dir := os.Getenv("CW_PROJECTS_DIR"); dir != "" {
 		return dir
 	}
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, "development")
+	return filepath.Join(home, "cw", "projects")
 }
 
 // EnsureProjectsDir creates the projects directory if it doesn't exist.
@@ -41,13 +41,13 @@ func EnsureProjectsDir() error {
 
 // EnvsDir returns the directory for global env files.
 // Override with CW_ENVS_DIR env var.
-// Default: ~/development/dotenvs
+// Default: ~/cw/envs
 func EnvsDir() string {
 	if dir := os.Getenv("CW_ENVS_DIR"); dir != "" {
 		return dir
 	}
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, "development", "dotenvs")
+	return filepath.Join(home, "cw", "envs")
 }
 
 // BinDir returns the directory where the cw binary is installed.
