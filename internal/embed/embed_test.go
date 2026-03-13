@@ -92,6 +92,136 @@ func TestPluginJSONContent(t *testing.T) {
 	}
 }
 
+// --- Install (via paths.DataDir) ---
+
+func TestInstall(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("CW_DATA_DIR", tmp)
+
+	if err := Install(); err != nil {
+		t.Fatal(err)
+	}
+
+	if Dir() != tmp {
+		t.Errorf("Dir() = %q, want %q", Dir(), tmp)
+	}
+
+	// Verify some files exist
+	if _, err := os.Stat(filepath.Join(tmp, "plugins", ".claude-plugin", "plugin.json")); err != nil {
+		t.Error("expected plugin.json after Install()")
+	}
+}
+
+// --- Cleanup of old files ---
+
+func TestInstallCleansOldFiles(t *testing.T) {
+	tmp := t.TempDir()
+
+	// First install
+	installToDir(tmp)
+
+	// Add a stale file in a managed directory
+	stale := filepath.Join(tmp, "plugins", "commands", "stale-old-command.md")
+	os.WriteFile(stale, []byte("old"), 0644)
+
+	// Re-install — stale file should be cleaned
+	installToDir(tmp)
+
+	if _, err := os.Stat(stale); !os.IsNotExist(err) {
+		t.Error("stale file should be removed after re-install")
+	}
+}
+
+func TestInstallCleansOldModes(t *testing.T) {
+	tmp := t.TempDir()
+
+	installToDir(tmp)
+
+	stale := filepath.Join(tmp, "modes", "stale-mode.md")
+	os.WriteFile(stale, []byte("old"), 0644)
+
+	installToDir(tmp)
+
+	if _, err := os.Stat(stale); !os.IsNotExist(err) {
+		t.Error("stale mode file should be removed")
+	}
+}
+
+func TestInstallCleansOldHooks(t *testing.T) {
+	tmp := t.TempDir()
+
+	installToDir(tmp)
+
+	stale := filepath.Join(tmp, "hooks", "stale-hook.sh")
+	os.WriteFile(stale, []byte("old"), 0644)
+
+	installToDir(tmp)
+
+	if _, err := os.Stat(stale); !os.IsNotExist(err) {
+		t.Error("stale hook file should be removed")
+	}
+}
+
+// --- generatePluginsFromCommands ---
+
+func TestGeneratedCommandPlugins(t *testing.T) {
+	tmp := t.TempDir()
+	installToDir(tmp)
+
+	commandsDir := filepath.Join(tmp, "plugins", "commands")
+
+	// CLI commands should generate .md files with "cw internal" invocation
+	cliGenerated := []string{"force_compact.md", "new_session.md", "reload.md", "open_project.md"}
+	for _, name := range cliGenerated {
+		path := filepath.Join(commandsDir, name)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Errorf("missing generated plugin: %s: %v", name, err)
+			continue
+		}
+		content := string(data)
+		if !contains(content, "cw internal") {
+			t.Errorf("%s should contain 'cw internal'", name)
+		}
+	}
+
+	// Prompt commands should have PluginBody content
+	promptGenerated := []string{"mode.md", "permissions.md", "help.md", "worktree.md", "new-intention.md"}
+	for _, name := range promptGenerated {
+		path := filepath.Join(commandsDir, name)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Errorf("missing generated plugin: %s: %v", name, err)
+			continue
+		}
+		if len(data) < 50 {
+			t.Errorf("%s seems too short (%d bytes)", name, len(data))
+		}
+	}
+}
+
+func TestGeneratedPluginsHaveFrontmatter(t *testing.T) {
+	tmp := t.TempDir()
+	installToDir(tmp)
+
+	commandsDir := filepath.Join(tmp, "plugins", "commands")
+	entries, _ := os.ReadDir(commandsDir)
+
+	for _, e := range entries {
+		if e.IsDir() || e.Name() == ".gitkeep" {
+			continue
+		}
+		data, _ := os.ReadFile(filepath.Join(commandsDir, e.Name()))
+		content := string(data)
+		if !contains(content, "---") {
+			t.Errorf("%s should have YAML frontmatter", e.Name())
+		}
+		if !contains(content, "description:") {
+			t.Errorf("%s should have description in frontmatter", e.Name())
+		}
+	}
+}
+
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && searchString(s, substr)
 }

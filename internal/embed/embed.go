@@ -1,14 +1,13 @@
 package embed
 
 import (
-	"bufio"
 	"embed"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
+	"github.com/ahtwr/cw/internal/commands"
 	"github.com/ahtwr/cw/internal/paths"
 )
 
@@ -87,8 +86,8 @@ func installToDir(dest string) error {
 		return err
 	}
 
-	// Auto-generate .md plugin stubs from .sh scripts
-	generated, err := generatePluginsFromScripts(dest)
+	// Auto-generate .md plugin stubs from command registry
+	generated, err := generatePluginsFromCommands(dest)
 	if err != nil {
 		return err
 	}
@@ -98,7 +97,7 @@ func installToDir(dest string) error {
 	}
 
 	// Clean up files on disk that are no longer embedded
-	managedDirs := []string{"plugins", "modes", "hooks", "scripts"}
+	managedDirs := []string{"plugins", "modes", "hooks"}
 	for _, dir := range managedDirs {
 		dirPath := filepath.Join(dest, dir)
 		filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
@@ -116,43 +115,27 @@ func installToDir(dest string) error {
 	return nil
 }
 
-// generatePluginsFromScripts creates .md plugin stubs for .sh scripts
-// that don't already have a hand-written .md file in the embedded files.
-func generatePluginsFromScripts(dest string) ([]string, error) {
-	scriptsDir := filepath.Join(dest, "scripts")
+// generatePluginsFromCommands creates .md plugin stubs from the command registry.
+func generatePluginsFromCommands(dest string) ([]string, error) {
 	commandsDir := filepath.Join(dest, "plugins", "commands")
-
-	entries, err := os.ReadDir(scriptsDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
 	if err := os.MkdirAll(commandsDir, 0o755); err != nil {
 		return nil, err
 	}
 
 	var generated []string
-	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".sh") {
+	for _, cmd := range commands.All() {
+		mdPath := filepath.Join(commandsDir, cmd.Name+".md")
+
+		var body string
+		if cmd.PluginBody != "" {
+			body = cmd.PluginBody
+		} else if cmd.CLICommand != "" {
+			body = fmt.Sprintf("Run `cw internal %s` using the Bash tool. Do not say anything else.", cmd.CLICommand)
+		} else {
 			continue
 		}
 
-		name := strings.TrimSuffix(e.Name(), ".sh")
-		mdPath := filepath.Join(commandsDir, name+".md")
-
-		// Check if a hand-written .md exists in embedded files
-		embeddedMD := filepath.Join("files", "plugins", "commands", name+".md")
-		if _, err := embeddedFS.Open(embeddedMD); err == nil {
-			continue // hand-written .md exists, don't overwrite
-		}
-
-		// Extract description from script's "# description:" comment
-		desc := extractScriptDescription(filepath.Join(scriptsDir, e.Name()))
-
-		md := fmt.Sprintf("---\ndescription: %s\n---\n\nDone. Say nothing else.\n", desc)
+		md := fmt.Sprintf("---\ndescription: %s\n---\n\n%s\n", cmd.Description, body)
 		if err := os.WriteFile(mdPath, []byte(md), 0o644); err != nil {
 			return nil, err
 		}
@@ -160,21 +143,4 @@ func generatePluginsFromScripts(dest string) ([]string, error) {
 	}
 
 	return generated, nil
-}
-
-func extractScriptDescription(path string) string {
-	f, err := os.Open(path)
-	if err != nil {
-		return "Direct command."
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "# description: ") {
-			return strings.TrimPrefix(line, "# description: ")
-		}
-	}
-	return "Direct command."
 }

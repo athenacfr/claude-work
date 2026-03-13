@@ -31,20 +31,9 @@ func EnsureHooks(name, cwRoot string) error {
 
 	preWriteGuard := filepath.Join(cwRoot, "hooks", "pre-write-guard.sh")
 	autoCompact := filepath.Join(cwRoot, "hooks", "auto-compact.sh")
-	skillIntercept := filepath.Join(cwRoot, "hooks", "skill-intercept.sh")
 
 	cfg := hooksConfig{
 		Hooks: map[string][]matcherGroup{
-			"UserPromptSubmit": {
-				{
-					Hooks: []hookEntry{
-						{
-							Type:    "command",
-							Command: skillIntercept,
-						},
-					},
-				},
-			},
 			"PreToolUse": {
 				{
 					Matcher: "Edit|Write",

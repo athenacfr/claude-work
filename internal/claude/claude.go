@@ -13,18 +13,20 @@ import (
 )
 
 type LaunchConfig struct {
-	WorkDir         string
-	ProjectName     string
-	PluginDir       string
-	Mode            config.Mode
-	Prompt          string   // initial message (positional arg to claude)
-	SystemPrompts   []string // prompt strings passed via --append-system-prompt
-	AddDirs         []string // repo paths passed via --add-dir (loads rules via env var)
+	WorkDir          string
+	ProjectName      string
+	PluginDir        string
+	Mode             config.Mode
+	Prompt           string   // initial message (positional arg to claude)
+	SystemPrompts    []string // prompt strings passed via --append-system-prompt
+	AddDirs          []string // repo paths passed via --add-dir (loads rules via env var)
+	Resume           bool     // pass --continue to resume most recent conversation (transient, set by TUI session selection)
+	SessionID        string   // pass --resume <id> to resume a specific session (transient, set by TUI session selection)
 	SkipPermissions  bool     // pass --dangerously-skip-permissions to claude
-	Continue         bool     // pass --continue to resume most recent conversation
 	EditorMode       bool     // open WorkDir with $EDITOR instead of launching claude
 	AutoSetup        bool     // set CW_AUTO_SETUP=1 so skills know cw auto-invoked them
 	AutoCompactLimit int      // 0=off, 40/50/60/70/80 — context % threshold for auto-compact
+	Print            bool     // run in non-interactive mode (-p): process prompt and exit
 }
 
 // reloadRequested is set when SIGUSR1 is received from `cw internal reload`
@@ -39,11 +41,16 @@ func Launch(cfg LaunchConfig) error {
 	reloadRequested.Store(false)
 
 	var args []string
+	if cfg.Print {
+		args = append(args, "-p")
+	}
 	if cfg.SkipPermissions {
 		args = append(args, "--dangerously-skip-permissions")
 	}
 
-	if cfg.Continue {
+	if cfg.SessionID != "" {
+		args = append(args, "--resume", cfg.SessionID)
+	} else if cfg.Resume {
 		args = append(args, "--continue")
 	}
 

@@ -18,6 +18,7 @@ import (
 	"github.com/ahtwr/cw/internal/env"
 	"github.com/ahtwr/cw/internal/paths"
 	"github.com/ahtwr/cw/internal/project"
+	"github.com/ahtwr/cw/internal/session"
 	"github.com/ahtwr/cw/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -81,59 +82,6 @@ func uninstall() {
 	}
 }
 
-func internalPermissionsSwitch(value string) {
-	if value != "bypass" && value != "normal" {
-		fmt.Fprintf(os.Stderr, "invalid permissions value: %s (use 'bypass' or 'normal')\n", value)
-		os.Exit(1)
-	}
-	if err := os.WriteFile(paths.PermissionsOverrideFile(), []byte(value), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "cannot write permissions override: %v\n", err)
-		os.Exit(1)
-	}
-	internalReload()
-}
-
-func internalModeSwitch(modeName string) {
-	config.InitModes(cwembed.ModesDir())
-	if _, ok := config.GetMode(modeName); !ok {
-		fmt.Fprintf(os.Stderr, "unknown mode: %s\n", modeName)
-		os.Exit(1)
-	}
-	if err := os.WriteFile(paths.ModeOverrideFile(), []byte(modeName), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "cannot write mode override: %v\n", err)
-		os.Exit(1)
-	}
-	internalReload()
-}
-
-func internalSaveMetadata(jsonStr string) {
-	projectDir := os.Getenv("CW_PROJECT_DIR")
-	if projectDir == "" {
-		fmt.Fprintln(os.Stderr, "CW_PROJECT_DIR not set — not running inside cw")
-		os.Exit(1)
-	}
-	if err := project.SaveMetadata(projectDir, jsonStr); err != nil {
-		fmt.Fprintf(os.Stderr, "save-metadata: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func internalAutoCompact() {
-	if err := os.WriteFile(paths.AutoCompactFile(), []byte("1"), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "cannot write auto-compact file: %v\n", err)
-		os.Exit(1)
-	}
-	internalReload()
-}
-
-func internalNewSession() {
-	if err := os.WriteFile(paths.NewSessionFile(), []byte("1"), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "cannot write new-session file: %v\n", err)
-		os.Exit(1)
-	}
-	internalReload()
-}
-
 func internalReload() {
 	pidStr := os.Getenv("CW_PID")
 	if pidStr == "" {
@@ -156,10 +104,62 @@ func internalReload() {
 	}
 }
 
+func internalNewSession() {
+	if err := os.WriteFile(paths.NewSessionFile(), []byte("1"), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "cannot write new-session file: %v\n", err)
+		os.Exit(1)
+	}
+	internalReload()
+}
+
+func internalAutoCompact() {
+	if err := os.WriteFile(paths.AutoCompactFile(), []byte("1"), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "cannot write auto-compact file: %v\n", err)
+		os.Exit(1)
+	}
+	internalReload()
+}
+
+func internalModeSwitch(modeName string) {
+	config.InitModes(cwembed.ModesDir())
+	if _, ok := config.GetMode(modeName); !ok {
+		fmt.Fprintf(os.Stderr, "unknown mode: %s\n", modeName)
+		os.Exit(1)
+	}
+	if err := os.WriteFile(paths.ModeOverrideFile(), []byte(modeName), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "cannot write mode override: %v\n", err)
+		os.Exit(1)
+	}
+	internalReload()
+}
+
+func internalPermissionsSwitch(value string) {
+	if value != "bypass" && value != "normal" {
+		fmt.Fprintf(os.Stderr, "invalid permissions value: %s (use 'bypass' or 'normal')\n", value)
+		os.Exit(1)
+	}
+	if err := os.WriteFile(paths.PermissionsOverrideFile(), []byte(value), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "cannot write permissions override: %v\n", err)
+		os.Exit(1)
+	}
+	internalReload()
+}
+
+func internalSaveMetadata(jsonStr string) {
+	projectDir := os.Getenv("CW_PROJECT_DIR")
+	if projectDir == "" {
+		fmt.Fprintln(os.Stderr, "CW_PROJECT_DIR not set — not running inside cw")
+		os.Exit(1)
+	}
+	if err := project.SaveMetadata(projectDir, jsonStr); err != nil {
+		fmt.Fprintf(os.Stderr, "save-metadata: %v\n", err)
+		os.Exit(1)
+	}
+}
+
 // openFolder opens a directory in the best available editor/file manager.
-// Priority: $VISUAL, $EDITOR, VS Code, then platform file explorer.
+// Priority: $VISUAL, VS Code, then platform file explorer.
 func openFolder(dir string) {
-	// 1. $VISUAL
 	if editor := os.Getenv("VISUAL"); editor != "" {
 		cmd := exec.Command(editor, dir)
 		cmd.Stdin = os.Stdin
@@ -171,13 +171,11 @@ func openFolder(dir string) {
 		return
 	}
 
-	// 2. VS Code
 	if path, err := exec.LookPath("code"); err == nil {
 		exec.Command(path, dir).Start()
 		return
 	}
 
-	// 3. Platform file explorer
 	var cmd *exec.Cmd
 	if runtime.GOOS == "darwin" {
 		cmd = exec.Command("open", dir)
@@ -195,46 +193,49 @@ func main() {
 		return
 	}
 
-	if len(os.Args) > 2 && os.Args[1] == "internal" && os.Args[2] == "reload" {
-		internalReload()
-		return
-	}
-
-	if len(os.Args) > 2 && os.Args[1] == "internal" && os.Args[2] == "new-session" {
-		internalNewSession()
-		return
-	}
-
-	if len(os.Args) > 2 && os.Args[1] == "internal" && (os.Args[2] == "auto-compact" || os.Args[2] == "force-compact") {
-		internalAutoCompact()
-		return
-	}
-
-	if len(os.Args) > 3 && os.Args[1] == "internal" && os.Args[2] == "mode-switch" {
-		internalModeSwitch(os.Args[3])
-		return
-	}
-
-	if len(os.Args) > 3 && os.Args[1] == "internal" && os.Args[2] == "permissions-switch" {
-		internalPermissionsSwitch(os.Args[3])
-		return
-	}
-
-	if len(os.Args) > 2 && os.Args[1] == "internal" && os.Args[2] == "open-project" {
-		dir := os.Getenv("CW_PROJECT_DIR")
-		if dir == "" {
-			fmt.Fprintln(os.Stderr, "CW_PROJECT_DIR not set — not running inside cw")
-			os.Exit(1)
+	// Internal CLI commands (called by Claude via Bash tool)
+	if len(os.Args) > 2 && os.Args[1] == "internal" {
+		switch os.Args[2] {
+		case "reload":
+			internalReload()
+			return
+		case "new-session":
+			internalNewSession()
+			return
+		case "auto-compact", "force-compact":
+			internalAutoCompact()
+			return
+		case "mode-switch":
+			if len(os.Args) < 4 {
+				fmt.Fprintln(os.Stderr, "usage: cw internal mode-switch <mode>")
+				os.Exit(1)
+			}
+			internalModeSwitch(os.Args[3])
+			return
+		case "permissions-switch":
+			if len(os.Args) < 4 {
+				fmt.Fprintln(os.Stderr, "usage: cw internal permissions-switch <bypass|normal>")
+				os.Exit(1)
+			}
+			internalPermissionsSwitch(os.Args[3])
+			return
+		case "open-project":
+			dir := os.Getenv("CW_PROJECT_DIR")
+			if dir == "" {
+				fmt.Fprintln(os.Stderr, "CW_PROJECT_DIR not set — not running inside cw")
+				os.Exit(1)
+			}
+			go openFolder(dir)
+			time.Sleep(500 * time.Millisecond)
+			return
+		case "save-metadata":
+			if len(os.Args) < 4 {
+				fmt.Fprintln(os.Stderr, "usage: cw internal save-metadata '<json>'")
+				os.Exit(1)
+			}
+			internalSaveMetadata(os.Args[3])
+			return
 		}
-		go openFolder(dir)
-		// Give the editor a moment to start, then exit
-		time.Sleep(500 * time.Millisecond)
-		return
-	}
-
-	if len(os.Args) > 3 && os.Args[1] == "internal" && os.Args[2] == "save-metadata" {
-		internalSaveMetadata(os.Args[3])
-		return
 	}
 
 	// Extract embedded files (plugins, modes, hooks)
@@ -273,12 +274,12 @@ func main() {
 			continue
 		}
 
-		// Always resume the most recent conversation (unless launching with an initial prompt like onboarding)
-		if cfg.Prompt == "" {
-			cfg.Continue = true
-		}
+		// Session resumption is now handled by TUI selection:
+		// - "New Session": neither Resume nor SessionID
+		// - "Continue": cfg.Resume = true
+		// - Specific session: cfg.SessionID = "<id>"
 
-		// Reload loop: re-sync and re-launch with --continue on reload signal
+		// Reload loop: re-sync and re-launch on reload signal
 		for {
 			var envWatcher *env.Watcher
 			if cfg.ProjectName != "" {
@@ -333,7 +334,14 @@ func main() {
 				envWatcher = nil
 			}
 
-			if !claude.WasReload() {
+			// After print-mode compact (Phase 1), Claude exits normally (not via reload).
+			// Check for pending compact context to continue to Phase 2.
+			hasPendingContext := false
+			if _, err := os.Stat(paths.CompactContextFile()); err == nil {
+				hasPendingContext = true
+			}
+
+			if !claude.WasReload() && !hasPendingContext {
 				break
 			}
 
@@ -369,10 +377,28 @@ func main() {
 
 			// Reload: clear one-shot fields
 			cfg.Prompt = ""
-			if autoCompact {
-				cfg.Prompt = "/compact"
+			cfg.Print = false
+
+			// Check for pending compact context from a previous Phase 1
+			if ctxData, err := os.ReadFile(paths.CompactContextFile()); err == nil {
+				os.Remove(paths.CompactContextFile())
+				cfg.Prompt = string(ctxData)
+				autoCompact = false // already compacted in Phase 1
 			}
-			cfg.Continue = !newSession
+
+			if autoCompact {
+				// Two-phase auto-compact:
+				// Phase 1: extract task context, run /compact in print mode (exits immediately)
+				// Phase 2: on next reload iteration, send the context as continuation prompt
+				if ctx := session.ExtractRecentContext(cfg.WorkDir, 5); ctx != "" {
+					os.WriteFile(paths.CompactContextFile(), []byte(ctx), 0644)
+				}
+				cfg.Prompt = "/compact"
+				cfg.Print = true
+			}
+
+			cfg.Resume = !newSession
+			cfg.SessionID = ""
 			cfg.AutoSetup = false
 			cfg.SystemPrompts = nil
 		}

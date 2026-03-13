@@ -74,6 +74,13 @@ func AutoCompactFile() string {
 	return filepath.Join(DataDir(), "auto-compact")
 }
 
+// CompactContextFile returns the path to the sideband file that stores
+// task context extracted from the session JSONL before auto-compacting.
+// Used to continue the task after compact completes.
+func CompactContextFile() string {
+	return filepath.Join(DataDir(), "compact-context")
+}
+
 // BinDir returns the directory where the cw binary is installed.
 // Override with CW_BIN_DIR env var.
 // Defaults: macOS /usr/local/bin, Linux/WSL ~/.local/bin

@@ -7,7 +7,7 @@ INSTALL_DIR ?= $(HOME)/.local/bin
 endif
 INSTALL     := $(INSTALL_DIR)/$(BINARY)
 
-.PHONY: build install clean
+.PHONY: build install clean test-tui
 
 build:
 	go build -o bin/$(BINARY) .
@@ -18,3 +18,7 @@ install: build
 
 clean:
 	rm -f bin/$(BINARY)
+
+test-tui: build
+	cd tests && bun install --frozen-lockfile 2>/dev/null || cd tests && bun install
+	cd tests && CW_TEST_ROOT=$(CURDIR) bun run test

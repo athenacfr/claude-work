@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestMerge(t *testing.T) {
@@ -177,6 +178,183 @@ func TestSyncPreservesContentWhenSymlinkReplacedByFile(t *testing.T) {
 	if got := findLine(string(envData), "NEW_VAR"); got != "NEW_VAR=new" {
 		t.Errorf(".env: expected NEW_VAR=new, got %q", got)
 	}
+}
+
+// --- FilesForProject ---
+
+func TestFilesForProject(t *testing.T) {
+	files := FilesForProject("/project", []string{"repo-a", "repo-b"})
+
+	if len(files) != 4 {
+		t.Fatalf("expected 4 files, got %d", len(files))
+	}
+
+	// First two should be global, last two should be override
+	for _, f := range files[:2] {
+		if !containsStr(f, "global") {
+			t.Errorf("expected global file, got %q", f)
+		}
+	}
+	for _, f := range files[2:] {
+		if !containsStr(f, "override") {
+			t.Errorf("expected override file, got %q", f)
+		}
+	}
+}
+
+func TestFilesForProjectEmpty(t *testing.T) {
+	files := FilesForProject("/project", nil)
+	if len(files) != 0 {
+		t.Errorf("expected 0 files for no repos, got %d", len(files))
+	}
+}
+
+// --- Sync: skip write when unchanged ---
+
+func TestSyncSkipsUnchangedWrite(t *testing.T) {
+	dir := t.TempDir()
+	repoDir := filepath.Join(dir, "my-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	envsDir := EnvsDir()
+	os.MkdirAll(envsDir, 0755)
+	os.WriteFile(filepath.Join(envsDir, ".env.my-repo.global"), []byte("KEY=val\n"), 0644)
+
+	// First sync
+	Sync(dir, []string{"my-repo"})
+	envPath := filepath.Join(repoDir, ".env")
+	info1, _ := os.Stat(envPath)
+
+	// Second sync with same content — file should not be rewritten
+	Sync(dir, []string{"my-repo"})
+	info2, _ := os.Stat(envPath)
+
+	if info1.ModTime() != info2.ModTime() {
+		t.Error("file should not be rewritten when content is unchanged")
+	}
+}
+
+// --- parseInto: non-NotExist error ---
+
+func TestParseIntoPermissionError(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "no-read.env")
+	os.WriteFile(path, []byte("KEY=val\n"), 0644)
+	os.Chmod(path, 0000)
+	defer os.Chmod(path, 0644)
+
+	vars := make(map[string]string)
+	var order []string
+	err := parseInto(path, vars, &order)
+	if err == nil {
+		t.Error("expected error for unreadable file")
+	}
+}
+
+// --- Sync: write error (repo dir doesn't exist) ---
+
+func TestSyncWriteError(t *testing.T) {
+	dir := t.TempDir()
+	// Don't create repo dir — write will fail
+	envsDir := EnvsDir()
+	os.MkdirAll(envsDir, 0755)
+	os.WriteFile(filepath.Join(envsDir, ".env.no-repo.global"), []byte("KEY=val\n"), 0644)
+
+	err := Sync(dir, []string{"no-repo"})
+	if err == nil {
+		t.Error("expected error when repo dir doesn't exist for write")
+	}
+}
+
+// --- parseInto: line without equals sign ---
+
+func TestMergeLineWithoutEquals(t *testing.T) {
+	dir := t.TempDir()
+	global := filepath.Join(dir, "global")
+	override := filepath.Join(dir, "override")
+
+	os.WriteFile(global, []byte("VALID=yes\nno-equals-here\nALSO_VALID=true\n"), 0644)
+	os.WriteFile(override, []byte(""), 0644)
+
+	result, err := merge(global, override)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if findLine(result, "VALID") != "VALID=yes" {
+		t.Error("expected VALID=yes")
+	}
+	if findLine(result, "ALSO_VALID") != "ALSO_VALID=true" {
+		t.Error("expected ALSO_VALID=true")
+	}
+}
+
+// --- Watch ---
+
+func TestWatchAndStop(t *testing.T) {
+	dir := t.TempDir()
+	repoDir := filepath.Join(dir, "my-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	envsDir := EnvsDir()
+	os.MkdirAll(envsDir, 0755)
+	os.WriteFile(filepath.Join(envsDir, ".env.my-repo.global"), []byte("KEY=val\n"), 0644)
+
+	// Ensure Sync works first
+	Sync(dir, []string{"my-repo"})
+
+	w, err := Watch(dir, []string{"my-repo"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Just verify we can stop without hanging
+	w.Stop()
+}
+
+func TestWatchDetectsChanges(t *testing.T) {
+	dir := t.TempDir()
+	repoDir := filepath.Join(dir, "my-repo")
+	os.MkdirAll(repoDir, 0755)
+
+	envsDir := EnvsDir()
+	os.MkdirAll(envsDir, 0755)
+	globalPath := filepath.Join(envsDir, ".env.my-repo.global")
+	os.WriteFile(globalPath, []byte("KEY=old\n"), 0644)
+
+	Sync(dir, []string{"my-repo"})
+
+	w, err := Watch(dir, []string{"my-repo"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer w.Stop()
+
+	// Modify the global file
+	os.WriteFile(globalPath, []byte("KEY=new\n"), 0644)
+
+	// Wait for debounce (500ms) + sync
+	for i := 0; i < 30; i++ {
+		time.Sleep(100 * time.Millisecond)
+		data, _ := os.ReadFile(filepath.Join(repoDir, ".env"))
+		if findLine(string(data), "KEY") == "KEY=new" {
+			return // success
+		}
+	}
+	t.Error("watch did not sync changes within timeout")
+}
+
+func containsStr(s, substr string) bool {
+	return len(s) >= len(substr) && searchStr(s, substr)
+}
+
+func searchStr(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
 
 func findLine(content, key string) string {
