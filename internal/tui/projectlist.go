@@ -74,6 +74,9 @@ type projectListModel struct {
 	// Global bypass permissions (persisted)
 	bypassPerms bool
 
+	// Auto-compact limit (persisted)
+	autoCompactLimit int
+
 	// All loaded projects (kept for preview)
 	projects []project.Project
 }
@@ -84,6 +87,7 @@ func newProjectListModel() projectListModel {
 		loading:          true,
 		expandedProjects: make(map[string]bool),
 		bypassPerms:      s.BypassPermissions,
+		autoCompactLimit: s.AutoCompactLimit,
 	}
 }
 
@@ -286,6 +290,28 @@ func (m projectListModel) update(msg tea.Msg) (projectListModel, tea.Cmd) {
 				m.bypassPerms = !m.bypassPerms
 				project.SaveGlobalSettings(project.Settings{
 					BypassPermissions: m.bypassPerms,
+					AutoCompactLimit:  m.autoCompactLimit,
+				})
+				return m, nil
+			case "c":
+				// Cycle auto-compact limit: off → 40 → 50 → 60 → 70 → 80 → off
+				switch m.autoCompactLimit {
+				case 0:
+					m.autoCompactLimit = 40
+				case 40:
+					m.autoCompactLimit = 50
+				case 50:
+					m.autoCompactLimit = 60
+				case 60:
+					m.autoCompactLimit = 70
+				case 70:
+					m.autoCompactLimit = 80
+				default:
+					m.autoCompactLimit = 0
+				}
+				project.SaveGlobalSettings(project.Settings{
+					BypassPermissions: m.bypassPerms,
+					AutoCompactLimit:  m.autoCompactLimit,
 				})
 				return m, nil
 			case "d":
@@ -435,6 +461,14 @@ func (m projectListModel) view() string {
 		permLabel = successStyle.Render("normal")
 	}
 	keybar := keyStyle.Render("p") + dimStyle.Render("ermissions") + "  " + permLabel
+
+	var compactLabel string
+	if m.autoCompactLimit == 0 {
+		compactLabel = dimStyle.Render("off")
+	} else {
+		compactLabel = accentStyle.Render(fmt.Sprintf("%d%%", m.autoCompactLimit))
+	}
+	keybar += "    " + keyStyle.Render("c") + dimStyle.Render("ompact") + "  " + compactLabel
 
 	return header + "\n" + m.fzfList.View() + "\n\n" + keybar
 }

@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/ahtwr/cw/internal/claude"
 	"github.com/ahtwr/cw/internal/config"
@@ -117,6 +118,14 @@ func internalSaveMetadata(jsonStr string) {
 	}
 }
 
+func internalAutoCompact() {
+	if err := os.WriteFile(paths.AutoCompactFile(), []byte("1"), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "cannot write auto-compact file: %v\n", err)
+		os.Exit(1)
+	}
+	internalReload()
+}
+
 func internalNewSession() {
 	if err := os.WriteFile(paths.NewSessionFile(), []byte("1"), 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "cannot write new-session file: %v\n", err)
@@ -162,31 +171,13 @@ func openFolder(dir string) {
 		return
 	}
 
-	// 2. $EDITOR (skip terminal-only editors that can't open folders)
-	if editor := os.Getenv("EDITOR"); editor != "" {
-		base := filepath.Base(editor)
-		switch base {
-		case "vi", "vim", "nvim", "nano", "pico", "emacs", "ed":
-			// skip — these don't open folders well
-		default:
-			cmd := exec.Command(editor, dir)
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			if err := cmd.Run(); err != nil {
-				fmt.Fprintf(os.Stderr, "editor exited: %v\n", err)
-			}
-			return
-		}
-	}
-
-	// 3. VS Code
+	// 2. VS Code
 	if path, err := exec.LookPath("code"); err == nil {
 		exec.Command(path, dir).Start()
 		return
 	}
 
-	// 4. Platform file explorer
+	// 3. Platform file explorer
 	var cmd *exec.Cmd
 	if runtime.GOOS == "darwin" {
 		cmd = exec.Command("open", dir)
@@ -214,6 +205,11 @@ func main() {
 		return
 	}
 
+	if len(os.Args) > 2 && os.Args[1] == "internal" && (os.Args[2] == "auto-compact" || os.Args[2] == "force-compact") {
+		internalAutoCompact()
+		return
+	}
+
 	if len(os.Args) > 3 && os.Args[1] == "internal" && os.Args[2] == "mode-switch" {
 		internalModeSwitch(os.Args[3])
 		return
@@ -221,6 +217,18 @@ func main() {
 
 	if len(os.Args) > 3 && os.Args[1] == "internal" && os.Args[2] == "permissions-switch" {
 		internalPermissionsSwitch(os.Args[3])
+		return
+	}
+
+	if len(os.Args) > 2 && os.Args[1] == "internal" && os.Args[2] == "open-project" {
+		dir := os.Getenv("CW_PROJECT_DIR")
+		if dir == "" {
+			fmt.Fprintln(os.Stderr, "CW_PROJECT_DIR not set — not running inside cw")
+			os.Exit(1)
+		}
+		go openFolder(dir)
+		// Give the editor a moment to start, then exit
+		time.Sleep(500 * time.Millisecond)
 		return
 	}
 
@@ -345,6 +353,13 @@ func main() {
 				cfg.SkipPermissions = permValue == "bypass"
 			}
 
+			// Check for auto-compact request via sideband file
+			autoCompact := false
+			if _, err := os.Stat(paths.AutoCompactFile()); err == nil {
+				os.Remove(paths.AutoCompactFile())
+				autoCompact = true
+			}
+
 			// Check for new-session request via sideband file
 			newSession := false
 			if _, err := os.Stat(paths.NewSessionFile()); err == nil {
@@ -354,6 +369,9 @@ func main() {
 
 			// Reload: clear one-shot fields
 			cfg.Prompt = ""
+			if autoCompact {
+				cfg.Prompt = "/compact"
+			}
 			cfg.Continue = !newSession
 			cfg.AutoSetup = false
 			cfg.SystemPrompts = nil

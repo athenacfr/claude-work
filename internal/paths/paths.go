@@ -68,6 +68,12 @@ func NewSessionFile() string {
 	return filepath.Join(DataDir(), "new-session")
 }
 
+// AutoCompactFile returns the path to the sideband file that signals the reload
+// loop to restart with /compact as the initial prompt.
+func AutoCompactFile() string {
+	return filepath.Join(DataDir(), "auto-compact")
+}
+
 // BinDir returns the directory where the cw binary is installed.
 // Override with CW_BIN_DIR env var.
 // Defaults: macOS /usr/local/bin, Linux/WSL ~/.local/bin

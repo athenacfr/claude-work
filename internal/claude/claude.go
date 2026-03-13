@@ -20,10 +20,11 @@ type LaunchConfig struct {
 	Prompt          string   // initial message (positional arg to claude)
 	SystemPrompts   []string // prompt strings passed via --append-system-prompt
 	AddDirs         []string // repo paths passed via --add-dir (loads rules via env var)
-	SkipPermissions bool     // pass --dangerously-skip-permissions to claude
-	Continue        bool     // pass --continue to resume most recent conversation
-	EditorMode      bool     // open WorkDir with $EDITOR instead of launching claude
-	AutoSetup       bool     // set CW_AUTO_SETUP=1 so skills know cw auto-invoked them
+	SkipPermissions  bool     // pass --dangerously-skip-permissions to claude
+	Continue         bool     // pass --continue to resume most recent conversation
+	EditorMode       bool     // open WorkDir with $EDITOR instead of launching claude
+	AutoSetup        bool     // set CW_AUTO_SETUP=1 so skills know cw auto-invoked them
+	AutoCompactLimit int      // 0=off, 40/50/60/70/80 — context % threshold for auto-compact
 }
 
 // reloadRequested is set when SIGUSR1 is received from `cw internal reload`
@@ -83,6 +84,9 @@ func Launch(cfg LaunchConfig) error {
 	}
 	if cfg.AutoSetup {
 		env = append(env, "CW_AUTO_SETUP=1")
+	}
+	if cfg.AutoCompactLimit > 0 {
+		env = append(env, fmt.Sprintf("CW_AUTO_COMPACT_LIMIT=%d", cfg.AutoCompactLimit))
 	}
 	if len(cfg.AddDirs) > 0 {
 		env = append(env, "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1")

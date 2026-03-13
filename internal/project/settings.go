@@ -10,6 +10,7 @@ import (
 
 type Settings struct {
 	BypassPermissions bool `json:"bypass_permissions"`
+	AutoCompactLimit  int  `json:"auto_compact_limit,omitempty"` // 0=off, 40/50/60/70/80
 }
 
 func globalSettingsPath() string {

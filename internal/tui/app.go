@@ -130,8 +130,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.launchConfig.Prompt = "/cw:new-intention"
 			m.launchConfig.SkipPermissions = true
 			m.launchConfig.AutoSetup = true
+			m.launchConfig.AutoCompactLimit = m.projectList.autoCompactLimit
 			return m, tea.Quit
 		}
+
+		// Pass auto-compact limit from settings
+		m.launchConfig.AutoCompactLimit = m.projectList.autoCompactLimit
 
 		// Use global bypass setting
 		bypass := m.projectList.bypassPerms
