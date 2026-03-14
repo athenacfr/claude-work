@@ -16,7 +16,6 @@ func TestInstallToDir(t *testing.T) {
 	// Check that key files were extracted
 	expectedFiles := []string{
 		"plugins/.claude-plugin/plugin.json",
-		"plugins/commands/worktree.md",
 		"plugins/commands/help.md",
 		"plugins/commands/mode.md",
 		"plugins/commands/new-intention.md",
@@ -186,7 +185,7 @@ func TestGeneratedCommandPlugins(t *testing.T) {
 	}
 
 	// Prompt commands should have PluginBody content
-	promptGenerated := []string{"mode.md", "permissions.md", "help.md", "worktree.md", "new-intention.md"}
+	promptGenerated := []string{"mode.md", "permissions.md", "help.md", "new-intention.md"}
 	for _, name := range promptGenerated {
 		path := filepath.Join(commandsDir, name)
 		data, err := os.ReadFile(path)

@@ -29,7 +29,7 @@ type ModeSelectedMsg struct {
 	Mode            config.Mode
 	SkipPermissions bool
 	SessionKind     int
-	SessionID       string
+	ResumeSessionID string
 }
 
 // NavigateMsg is sent to switch between screens.

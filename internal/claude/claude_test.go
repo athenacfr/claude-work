@@ -148,7 +148,7 @@ func TestLaunchPassesArgs(t *testing.T) {
 	err := Launch(LaunchConfig{
 		WorkDir:         t.TempDir(),
 		SkipPermissions: true,
-		SessionID:       "sess-42",
+		ResumeSessionID: "sess-42",
 		PluginDir:       "/plugins",
 		SystemPrompts:   []string{"prompt1", "prompt2"},
 		AddDirs:         []string{"/repo1", "/repo2"},
@@ -172,14 +172,14 @@ func TestLaunchPassesArgs(t *testing.T) {
 	assertContains(t, inv.Args, "hello")
 }
 
-func TestLaunchSessionIDFlag(t *testing.T) {
+func TestLaunchResumeSessionIDFlag(t *testing.T) {
 	mockClaudeBin(t)
 	outFile := filepath.Join(t.TempDir(), "out.json")
 	t.Setenv("MOCK_CLAUDE_OUTPUT", outFile)
 
 	err := Launch(LaunchConfig{
-		WorkDir:   t.TempDir(),
-		SessionID: "abc",
+		WorkDir:         t.TempDir(),
+		ResumeSessionID: "abc",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -188,6 +188,24 @@ func TestLaunchSessionIDFlag(t *testing.T) {
 	inv := readInvocation(t, outFile)
 	assertContains(t, inv.Args, "--resume")
 	assertContains(t, inv.Args, "abc")
+}
+
+func TestLaunchNewSessionIDFlag(t *testing.T) {
+	mockClaudeBin(t)
+	outFile := filepath.Join(t.TempDir(), "out.json")
+	t.Setenv("MOCK_CLAUDE_OUTPUT", outFile)
+
+	err := Launch(LaunchConfig{
+		WorkDir:      t.TempDir(),
+		NewSessionID: "550e8400-e29b-41d4-a716-446655440000",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	inv := readInvocation(t, outFile)
+	assertContains(t, inv.Args, "--session-id")
+	assertContains(t, inv.Args, "550e8400-e29b-41d4-a716-446655440000")
 }
 
 func TestLaunchPrintFlag(t *testing.T) {

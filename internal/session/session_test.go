@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 )
 
 func TestNew(t *testing.T) {
-	s := New("test-id", "code", false, 70)
+	s := New("test-id", "code", false)
 
 	if s.ID != "test-id" {
 		t.Errorf("ID = %q, want %q", s.ID, "test-id")
@@ -20,9 +19,6 @@ func TestNew(t *testing.T) {
 	}
 	if s.SkipPermissions {
 		t.Error("expected SkipPermissions = false")
-	}
-	if s.AutoCompactLimit != 70 {
-		t.Errorf("AutoCompactLimit = %d, want 70", s.AutoCompactLimit)
 	}
 	if s.Status != "active" {
 		t.Errorf("Status = %q, want %q", s.Status, "active")
@@ -38,8 +34,7 @@ func TestNew(t *testing.T) {
 func TestSaveAndLoad(t *testing.T) {
 	dir := t.TempDir()
 
-	s := New("save-test", "research", true, 50)
-	s.ClaudeSessionID = "claude-abc-123"
+	s := New("save-test", "research", true)
 	s.Summary = "Test session"
 
 	if err := s.Save(dir); err != nil {
@@ -58,17 +53,11 @@ func TestSaveAndLoad(t *testing.T) {
 	if loaded.ID != "save-test" {
 		t.Errorf("loaded ID = %q", loaded.ID)
 	}
-	if loaded.ClaudeSessionID != "claude-abc-123" {
-		t.Errorf("loaded ClaudeSessionID = %q", loaded.ClaudeSessionID)
-	}
 	if loaded.Mode != "research" {
 		t.Errorf("loaded Mode = %q", loaded.Mode)
 	}
 	if !loaded.SkipPermissions {
 		t.Error("expected loaded SkipPermissions = true")
-	}
-	if loaded.AutoCompactLimit != 50 {
-		t.Errorf("loaded AutoCompactLimit = %d", loaded.AutoCompactLimit)
 	}
 	if loaded.Summary != "Test session" {
 		t.Errorf("loaded Summary = %q", loaded.Summary)
@@ -89,12 +78,12 @@ func TestLoadMissing(t *testing.T) {
 func TestList(t *testing.T) {
 	dir := t.TempDir()
 
-	s1 := New("session-1", "code", false, 0)
+	s1 := New("session-1", "code", false)
 	s1.LastActive = "2025-01-15T10:00:00Z"
 	s1.Summary = "First session"
 	s1.Save(dir)
 
-	s2 := New("session-2", "research", false, 0)
+	s2 := New("session-2", "research", false)
 	s2.LastActive = "2025-01-15T12:00:00Z"
 	s2.Summary = "Second session"
 	s2.Save(dir)
@@ -135,7 +124,7 @@ func TestListSkipsNonJSON(t *testing.T) {
 	os.WriteFile(filepath.Join(sessDir, "notes.txt"), []byte("ignore"), 0644)
 	os.MkdirAll(filepath.Join(sessDir, "subdir"), 0755)
 
-	s := New("valid", "code", false, 0)
+	s := New("valid", "code", false)
 	s.Save(dir)
 
 	sessions, err := List(dir)
@@ -150,7 +139,7 @@ func TestListSkipsNonJSON(t *testing.T) {
 func TestTouch(t *testing.T) {
 	dir := t.TempDir()
 
-	s := New("touch-test", "code", false, 0)
+	s := New("touch-test", "code", false)
 	s.LastActive = "2020-01-01T00:00:00Z"
 	s.Save(dir)
 
@@ -174,7 +163,7 @@ func TestTouch(t *testing.T) {
 func TestDelete(t *testing.T) {
 	dir := t.TempDir()
 
-	s := New("delete-me", "code", false, 0)
+	s := New("delete-me", "code", false)
 	s.Save(dir)
 
 	if _, err := Load(dir, "delete-me"); err != nil {
@@ -198,40 +187,15 @@ func TestDeleteMissing(t *testing.T) {
 	}
 }
 
-func TestFindClaudeSessionID(t *testing.T) {
-	home, _ := os.UserHomeDir()
-	projectDir := "/test-find-claude-id"
-	encoded := strings.ReplaceAll(projectDir, "/", "-")
-	claudeDir := filepath.Join(home, ".claude", "projects", encoded)
-	os.MkdirAll(claudeDir, 0755)
-	defer os.RemoveAll(claudeDir)
-
-	os.WriteFile(filepath.Join(claudeDir, "abc-123.jsonl"), []byte("{}"), 0644)
-
-	got := FindClaudeSessionID(projectDir)
-	if got != "abc-123" {
-		t.Errorf("FindClaudeSessionID = %q, want %q", got, "abc-123")
-	}
-}
-
-func TestFindClaudeSessionIDEmpty(t *testing.T) {
-	got := FindClaudeSessionID("/nonexistent-project-for-test-" + itoa(int(time.Now().UnixNano())))
-	if got != "" {
-		t.Errorf("expected empty, got %q", got)
-	}
-}
-
 func TestJSONRoundtrip(t *testing.T) {
 	s := &Session{
-		ID:               "round-trip",
-		ClaudeSessionID:  "claude-xyz",
-		Mode:             "debug",
-		SkipPermissions:  true,
-		AutoCompactLimit: 80,
-		Summary:          "Test roundtrip",
-		StartedAt:        "2025-01-15T10:00:00Z",
-		LastActive:       "2025-01-15T11:00:00Z",
-		Status:           "active",
+		ID:              "round-trip",
+		Mode:            "debug",
+		SkipPermissions: true,
+		Summary:         "Test roundtrip",
+		StartedAt:       "2025-01-15T10:00:00Z",
+		LastActive:      "2025-01-15T11:00:00Z",
+		Status:          "active",
 	}
 
 	data, err := json.Marshal(s)
@@ -244,9 +208,9 @@ func TestJSONRoundtrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if loaded.ID != s.ID || loaded.ClaudeSessionID != s.ClaudeSessionID ||
+	if loaded.ID != s.ID ||
 		loaded.Mode != s.Mode || loaded.SkipPermissions != s.SkipPermissions ||
-		loaded.AutoCompactLimit != s.AutoCompactLimit || loaded.Summary != s.Summary ||
+		loaded.Summary != s.Summary ||
 		loaded.StartedAt != s.StartedAt || loaded.LastActive != s.LastActive ||
 		loaded.Status != s.Status {
 		t.Errorf("roundtrip mismatch: got %+v, want %+v", loaded, *s)

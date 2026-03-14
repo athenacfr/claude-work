@@ -135,7 +135,7 @@ func (m LauncherModel) Update(msg tea.Msg) (LauncherModel, tea.Cmd) {
 						Mode:            mode,
 						SkipPermissions: m.skipPermissions,
 						SessionKind:     si.entry.kind,
-						SessionID:       sessionEntryID(si.entry),
+						ResumeSessionID: sessionEntryID(si.entry),
 					}
 				}
 			case widget.FzfCancelMsg:

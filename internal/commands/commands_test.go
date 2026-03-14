@@ -24,7 +24,6 @@ func TestRequiredCommandsExist(t *testing.T) {
 		"mode",
 		"permissions",
 		"help",
-		"worktree",
 		"new-intention",
 		"yolo",
 		"yolo-start",
@@ -63,7 +62,7 @@ func TestCLICommandsHaveCLICommand(t *testing.T) {
 
 func TestPromptCommandsHavePluginBody(t *testing.T) {
 	// Prompt-only commands should have PluginBody set
-	promptCommands := []string{"mode", "permissions", "help", "worktree", "new-intention", "yolo"}
+	promptCommands := []string{"mode", "permissions", "help", "new-intention", "yolo"}
 
 	byName := commandsByName()
 	for _, name := range promptCommands {
@@ -131,7 +130,7 @@ func TestPublicExcludesInternal(t *testing.T) {
 }
 
 func TestPublicCommandsNotInternal(t *testing.T) {
-	publicNames := []string{"compact-and-continue", "new-session", "reload", "open-project", "mode", "permissions", "help", "worktree", "yolo", "new-intention"}
+	publicNames := []string{"compact-and-continue", "new-session", "reload", "open-project", "mode", "permissions", "help", "yolo", "new-intention"}
 	byName := commandsByName()
 
 	for _, name := range publicNames {

@@ -145,7 +145,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case 1:
 			m.launchConfig.Prompt = "/resume"
 		case 2:
-			m.launchConfig.SessionID = msg.SessionID
+			m.launchConfig.ResumeSessionID = msg.ResumeSessionID
 		}
 		return m, tea.Quit
 

@@ -13,16 +13,16 @@ import (
 )
 
 // Session represents a cw-managed session stored in <project>/.cw/sessions/.
+// The ID is a UUID that is shared with Claude via --session-id on first launch,
+// so both cw and Claude use the same identifier for the session.
 type Session struct {
-	ID               string `json:"id"`
-	ClaudeSessionID  string `json:"claude_session_id"`
-	Mode             string `json:"mode"`
-	SkipPermissions  bool   `json:"skip_permissions"`
-	AutoCompactLimit int    `json:"auto_compact_limit"`
-	Summary          string `json:"summary"`
-	StartedAt        string `json:"started_at"`
-	LastActive       string `json:"last_active"`
-	Status           string `json:"status"` // "active" or "completed"
+	ID              string `json:"id"`
+	Mode            string `json:"mode"`
+	SkipPermissions bool   `json:"skip_permissions"`
+	Summary         string `json:"summary"`
+	StartedAt       string `json:"started_at"`
+	LastActive      string `json:"last_active"`
+	Status          string `json:"status"` // "active" or "completed"
 }
 
 // sessionsDir returns the .cw/sessions/ directory for a project.
@@ -36,16 +36,15 @@ func sessionPath(projectDir, id string) string {
 }
 
 // New creates a new session with the given parameters.
-func New(id, mode string, skipPerms bool, autoCompactLimit int) *Session {
+func New(id, mode string, skipPerms bool) *Session {
 	now := time.Now().UTC().Format(time.RFC3339)
 	return &Session{
-		ID:               id,
-		Mode:             mode,
-		SkipPermissions:  skipPerms,
-		AutoCompactLimit: autoCompactLimit,
-		StartedAt:        now,
-		LastActive:       now,
-		Status:           "active",
+		ID:              id,
+		Mode:            mode,
+		SkipPermissions: skipPerms,
+		StartedAt:       now,
+		LastActive:      now,
+		Status:          "active",
 	}
 }
 
@@ -114,41 +113,6 @@ func List(projectDir string) ([]Session, error) {
 func (s *Session) Touch(projectDir string) error {
 	s.LastActive = time.Now().UTC().Format(time.RFC3339)
 	return s.Save(projectDir)
-}
-
-// FindClaudeSessionID discovers the Claude session ID by finding the most
-// recently modified JSONL file in Claude's session storage for the given
-// project directory. This reads directory listings only, not file contents.
-func FindClaudeSessionID(projectDir string) string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-
-	encoded := strings.ReplaceAll(projectDir, "/", "-")
-	dir := filepath.Join(home, ".claude", "projects", encoded)
-
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		return ""
-	}
-
-	var newestID string
-	var newestTime time.Time
-	for _, f := range files {
-		if f.IsDir() || !strings.HasSuffix(f.Name(), ".jsonl") {
-			continue
-		}
-		info, err := f.Info()
-		if err != nil {
-			continue
-		}
-		if info.ModTime().After(newestTime) {
-			newestTime = info.ModTime()
-			newestID = strings.TrimSuffix(f.Name(), ".jsonl")
-		}
-	}
-	return newestID
 }
 
 // Delete removes a session file.

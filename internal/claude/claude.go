@@ -20,7 +20,8 @@ type LaunchConfig struct {
 	Prompt           string   // initial message (positional arg to claude)
 	SystemPrompts    []string // prompt strings passed via --append-system-prompt
 	AddDirs          []string // repo paths passed via --add-dir (loads rules via env var)
-	SessionID        string   // pass --resume <id> to resume a specific session (transient, set by TUI session selection)
+	ResumeSessionID  string   // pass --resume <id> to resume an existing session
+	NewSessionID     string   // pass --session-id <uuid> to force a specific ID for a new session
 	SkipPermissions  bool     // pass --dangerously-skip-permissions to claude
 	EditorMode       bool     // open WorkDir with $EDITOR instead of launching claude
 	AutoSetup        bool     // set CW_AUTO_SETUP=1 so skills know cw auto-invoked them
@@ -51,8 +52,10 @@ func Launch(cfg LaunchConfig) error {
 		args = append(args, "--dangerously-skip-permissions")
 	}
 
-	if cfg.SessionID != "" {
-		args = append(args, "--resume", cfg.SessionID)
+	if cfg.ResumeSessionID != "" {
+		args = append(args, "--resume", cfg.ResumeSessionID)
+	} else if cfg.NewSessionID != "" {
+		args = append(args, "--session-id", cfg.NewSessionID)
 	}
 
 	if cfg.PluginDir != "" {

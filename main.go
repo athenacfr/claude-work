@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"os/exec"
@@ -324,27 +323,27 @@ func main() {
 
 		// Create or load the CW session for this launch
 		var cwSession *session.Session
-		if cfg.SessionID != "" {
-			// Resuming a specific CW session — load it and restore state
-			if s, err := session.Load(cfg.WorkDir, cfg.SessionID); err == nil {
+		var isNewSession bool
+		if cfg.ResumeSessionID != "" {
+			// Resuming a specific session — load it and restore state
+			if s, err := session.Load(cfg.WorkDir, cfg.ResumeSessionID); err == nil {
 				cwSession = s
 				// Restore mode from session
 				if m, ok := config.GetMode(s.Mode); ok {
 					cfg.Mode = m
 				}
 				cfg.SkipPermissions = s.SkipPermissions
-				cfg.AutoCompactLimit = s.AutoCompactLimit
-				// Use the Claude session ID for --resume
-				cfg.SessionID = s.ClaudeSessionID
+				// Same ID is used for both cw and Claude --resume
+				cfg.ResumeSessionID = s.ID
 			}
 		}
 		if cwSession == nil {
-			// New session — generate an ID and create
+			// New session — generate a UUID shared with Claude via --session-id
+			isNewSession = true
 			cwSession = session.New(
 				generateSessionID(),
 				cfg.Mode.Name,
 				cfg.SkipPermissions,
-				cfg.AutoCompactLimit,
 			)
 			cwSession.Save(cfg.WorkDir)
 		}
@@ -395,9 +394,13 @@ func main() {
 				stopSpinner = showCompactSpinner()
 			}
 
-			// Set CW session ID on launch config
+			// Set session IDs on launch config
 			if cwSession != nil {
 				cfg.CWSessionID = cwSession.ID
+				if isNewSession {
+					cfg.NewSessionID = cwSession.ID
+					isNewSession = false
+				}
 			}
 
 			if err := claude.Launch(cfg); err != nil {
@@ -413,11 +416,7 @@ func main() {
 				envWatcher = nil
 			}
 
-			// Capture Claude session ID and update CW session
 			if cwSession != nil {
-				if claudeID := session.FindClaudeSessionID(cfg.WorkDir); claudeID != "" {
-					cwSession.ClaudeSessionID = claudeID
-				}
 				cwSession.Touch(cfg.WorkDir)
 			}
 
@@ -501,6 +500,7 @@ func main() {
 			if _, err := os.Stat(paths.NewSessionFile()); err == nil {
 				os.Remove(paths.NewSessionFile())
 				newSession = true
+				isNewSession = true
 				// Mark old session as completed and create a fresh one
 				if cwSession != nil {
 					cwSession.Status = "completed"
@@ -510,7 +510,6 @@ func main() {
 					generateSessionID(),
 					cfg.Mode.Name,
 					cfg.SkipPermissions,
-					cfg.AutoCompactLimit,
 				)
 				cwSession.Save(cfg.WorkDir)
 			}
@@ -535,10 +534,10 @@ func main() {
 				cfg.Quiet = true
 			}
 
-			if !newSession && cwSession != nil && cwSession.ClaudeSessionID != "" {
-				cfg.SessionID = cwSession.ClaudeSessionID
+			if !newSession && cwSession != nil {
+				cfg.ResumeSessionID = cwSession.ID
 			} else {
-				cfg.SessionID = ""
+				cfg.ResumeSessionID = ""
 			}
 			cfg.AutoSetup = false
 			cfg.SystemPrompts = nil
@@ -546,11 +545,15 @@ func main() {
 	}
 }
 
-// generateSessionID creates a random hex session ID.
+// generateSessionID creates a random UUID v4 session ID.
+// This ID is shared between cw and Claude via --session-id.
 func generateSessionID() string {
 	b := make([]byte, 16)
 	rand.Read(b)
-	return hex.EncodeToString(b)
+	b[6] = (b[6] & 0x0f) | 0x40 // version 4
+	b[8] = (b[8] & 0x3f) | 0x80 // variant 2
+	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
+		b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }
 
 // showCompactSpinner displays a terminal spinner while auto-compact runs.
