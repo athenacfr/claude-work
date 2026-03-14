@@ -1,6 +1,7 @@
 package session
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/ahtwr/cw/internal/paths"
 )
@@ -171,4 +173,96 @@ func itoa(n int) string {
 func ParseTime(s string) time.Time {
 	t, _ := time.Parse(time.RFC3339, s)
 	return t
+}
+
+// ExtractSummary reads the Claude JSONL file for a session and extracts
+// the first user message as a summary. workDir is the directory Claude
+// was launched in (used to locate the JSONL file).
+func ExtractSummary(sessionID, workDir string) string {
+	jsonlPath := claudeJSONLPath(sessionID, workDir)
+	if jsonlPath == "" {
+		return ""
+	}
+
+	f, err := os.Open(jsonlPath)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 256*1024), 256*1024)
+
+	for scanner.Scan() {
+		line := scanner.Bytes()
+
+		var rec struct {
+			Type    string `json:"type"`
+			Message struct {
+				Role    string `json:"role"`
+				Content any    `json:"content"`
+			} `json:"message"`
+		}
+		if json.Unmarshal(line, &rec) != nil {
+			continue
+		}
+
+		if rec.Type != "user" || rec.Message.Role != "user" {
+			continue
+		}
+
+		text := extractMessageText(rec.Message.Content)
+		text = strings.TrimSpace(text)
+
+		// Skip command/system messages
+		if text == "" || strings.HasPrefix(text, "<") {
+			continue
+		}
+
+		// Truncate to a reasonable length
+		if utf8.RuneCountInString(text) > 120 {
+			runes := []rune(text)
+			text = string(runes[:120])
+		}
+
+		return text
+	}
+
+	return ""
+}
+
+// claudeJSONLPath returns the path to Claude's JSONL file for a session.
+// Claude stores sessions at ~/.claude/projects/<encoded-workdir>/<session-id>.jsonl
+// where encoded-workdir has "/" replaced by "-".
+func claudeJSONLPath(sessionID, workDir string) string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	encoded := strings.ReplaceAll(workDir, string(filepath.Separator), "-")
+	path := filepath.Join(home, ".claude", "projects", encoded, sessionID+".jsonl")
+
+	if _, err := os.Stat(path); err == nil {
+		return path
+	}
+	return ""
+}
+
+// extractMessageText gets the text content from a user message.
+// Content can be a string or an array of content blocks.
+func extractMessageText(content any) string {
+	switch v := content.(type) {
+	case string:
+		return v
+	case []any:
+		for _, block := range v {
+			if m, ok := block.(map[string]any); ok {
+				if t, ok := m["text"].(string); ok {
+					return t
+				}
+			}
+		}
+	}
+	return ""
 }

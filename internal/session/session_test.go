@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -322,4 +323,145 @@ func TestParseTimeInvalid(t *testing.T) {
 	if !got.IsZero() {
 		t.Errorf("expected zero time for invalid input, got %v", got)
 	}
+}
+
+// --- ExtractSummary ---
+
+func TestExtractSummaryFromJSONL(t *testing.T) {
+	// Create a fake Claude projects dir structure
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	workDir := "/home/testuser/projects/myproject"
+	sessionID := "test-session-123"
+
+	// Claude encodes workDir by replacing "/" with "-"
+	encoded := "-home-testuser-projects-myproject"
+	jsonlDir := filepath.Join(home, ".claude", "projects", encoded)
+	os.MkdirAll(jsonlDir, 0755)
+
+	// Write a fake JSONL with user messages
+	lines := []string{
+		`{"type":"progress","slug":"calm-exploring-turtle"}`,
+		`{"type":"user","message":{"role":"user","content":"<command-message>cw:yolo</command-message>"}}`,
+		`{"type":"user","message":{"role":"user","content":"fix the login page"}}`,
+		`{"type":"user","message":{"role":"user","content":"also update the tests"}}`,
+	}
+	jsonlPath := filepath.Join(jsonlDir, sessionID+".jsonl")
+	os.WriteFile(jsonlPath, []byte(joinTestLines(lines)), 0644)
+
+	got := ExtractSummary(sessionID, workDir)
+	if got != "fix the login page" {
+		t.Errorf("ExtractSummary = %q, want %q", got, "fix the login page")
+	}
+}
+
+func TestExtractSummarySkipsCommands(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	workDir := "/test/dir"
+	sessionID := "cmd-session"
+
+	encoded := "-test-dir"
+	jsonlDir := filepath.Join(home, ".claude", "projects", encoded)
+	os.MkdirAll(jsonlDir, 0755)
+
+	lines := []string{
+		`{"type":"user","message":{"role":"user","content":"<command-message>foo</command-message>"}}`,
+		`{"type":"user","message":{"role":"user","content":"<local-command>bar</local-command>"}}`,
+		`{"type":"user","message":{"role":"user","content":"hello world"}}`,
+	}
+	jsonlPath := filepath.Join(jsonlDir, sessionID+".jsonl")
+	os.WriteFile(jsonlPath, []byte(joinTestLines(lines)), 0644)
+
+	got := ExtractSummary(sessionID, workDir)
+	if got != "hello world" {
+		t.Errorf("ExtractSummary = %q, want %q", got, "hello world")
+	}
+}
+
+func TestExtractSummaryContentArray(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	workDir := "/test/arr"
+	sessionID := "arr-session"
+
+	encoded := "-test-arr"
+	jsonlDir := filepath.Join(home, ".claude", "projects", encoded)
+	os.MkdirAll(jsonlDir, 0755)
+
+	lines := []string{
+		`{"type":"user","message":{"role":"user","content":[{"type":"text","text":"array content here"}]}}`,
+	}
+	jsonlPath := filepath.Join(jsonlDir, sessionID+".jsonl")
+	os.WriteFile(jsonlPath, []byte(joinTestLines(lines)), 0644)
+
+	got := ExtractSummary(sessionID, workDir)
+	if got != "array content here" {
+		t.Errorf("ExtractSummary = %q, want %q", got, "array content here")
+	}
+}
+
+func TestExtractSummaryTruncatesLong(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	workDir := "/test/long"
+	sessionID := "long-session"
+
+	encoded := "-test-long"
+	jsonlDir := filepath.Join(home, ".claude", "projects", encoded)
+	os.MkdirAll(jsonlDir, 0755)
+
+	longMsg := strings.Repeat("x", 200)
+	lines := []string{
+		`{"type":"user","message":{"role":"user","content":"` + longMsg + `"}}`,
+	}
+	jsonlPath := filepath.Join(jsonlDir, sessionID+".jsonl")
+	os.WriteFile(jsonlPath, []byte(joinTestLines(lines)), 0644)
+
+	got := ExtractSummary(sessionID, workDir)
+	if len(got) != 120 {
+		t.Errorf("expected truncated to 120 chars, got %d", len(got))
+	}
+}
+
+func TestExtractSummaryMissingFile(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	got := ExtractSummary("nonexistent", "/no/such/dir")
+	if got != "" {
+		t.Errorf("expected empty for missing file, got %q", got)
+	}
+}
+
+func TestExtractSummaryNoUserMessages(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	workDir := "/test/nousers"
+	sessionID := "no-users"
+
+	encoded := "-test-nousers"
+	jsonlDir := filepath.Join(home, ".claude", "projects", encoded)
+	os.MkdirAll(jsonlDir, 0755)
+
+	lines := []string{
+		`{"type":"progress","slug":"test-slug"}`,
+		`{"type":"system","message":"system init"}`,
+	}
+	jsonlPath := filepath.Join(jsonlDir, sessionID+".jsonl")
+	os.WriteFile(jsonlPath, []byte(joinTestLines(lines)), 0644)
+
+	got := ExtractSummary(sessionID, workDir)
+	if got != "" {
+		t.Errorf("expected empty for no user messages, got %q", got)
+	}
+}
+
+func joinTestLines(lines []string) string {
+	return strings.Join(lines, "\n") + "\n"
 }

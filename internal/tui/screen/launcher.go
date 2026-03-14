@@ -2,6 +2,7 @@ package screen
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/ahtwr/cw/internal/config"
@@ -89,9 +90,13 @@ func (m LauncherModel) Update(msg tea.Msg) (LauncherModel, tea.Cmd) {
 		entries := []sessionEntry{
 			{label: "+ New Session", kind: 0},
 		}
+		// Sessions come sorted by LastActive desc; assign numbers by StartedAt asc
+		numberMap := sessionNumbers(msg.sessions)
 		for i := range msg.sessions {
 			s := msg.sessions[i]
-			label := fmt.Sprintf("%s  %s", session.RelativeTime(session.ParseTime(s.LastActive)), s.Summary)
+			num := numberMap[s.ID]
+			label := fmt.Sprintf("Session #%d  %s  %s", num,
+				session.RelativeTime(session.ParseTime(s.LastActive)), s.Summary)
 			entries = append(entries, sessionEntry{label: label, session: &s, kind: 2})
 		}
 		items := make([]widget.FzfItem, len(entries))
@@ -250,6 +255,27 @@ func renderSessionItem(item widget.FzfItem, index int, cursor, selected bool, ma
 	indent := strings.Repeat(" ", prefixWidth)
 	wrapped := indent + widget.Truncate(widget.HighlightMatches(line2, matched2), contentWidth)
 	return result + "\n" + wrapped
+}
+
+// sessionNumbers assigns sequential numbers to sessions based on StartedAt order.
+// Returns a map of session ID → number (1-based, oldest = #1).
+func sessionNumbers(sessions []session.Session) map[string]int {
+	type idTime struct {
+		id   string
+		time string
+	}
+	sorted := make([]idTime, len(sessions))
+	for i, s := range sessions {
+		sorted[i] = idTime{id: s.ID, time: s.StartedAt}
+	}
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].time < sorted[j].time
+	})
+	m := make(map[string]int, len(sorted))
+	for i, s := range sorted {
+		m[s.id] = i + 1
+	}
+	return m
 }
 
 func sessionPreview(item widget.FzfItem, width, height int) string {

@@ -433,9 +433,12 @@ func main() {
 			}
 
 			if !claude.WasReload() && !hasPendingContext {
-				// Session ended normally — mark as completed
+				// Session ended normally — mark as completed and extract summary
 				if cwSession != nil {
 					cwSession.Status = "completed"
+					if cwSession.Summary == "" {
+						cwSession.Summary = session.ExtractSummary(cwSession.ID, cfg.WorkDir)
+					}
 					cwSession.Save(cfg.WorkDir)
 				}
 				// Clean up dev logs and yolo plan files
