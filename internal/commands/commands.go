@@ -378,9 +378,9 @@ Set up a cw project by understanding what the user wants to work on, creating br
 
 ### Step 1: Map the codebase
 
-Explore all repos in the project directory autonomously — do NOT ask the user about tech stack or structure:
+Explore all subprojects in the project directory autonomously — do NOT ask the user about tech stack or structure:
 
-- List top-level files and directories in each repo
+- List top-level files and directories in each subproject
 - Read package.json, go.mod, Cargo.toml, pyproject.toml, requirements.txt, Makefile, docker-compose.yml, or whatever dependency/config files exist
 - Scan a few key source files to understand patterns (naming, formatting, test structure)
 - Check for existing linter configs (.eslintrc, .prettierrc, .golangci.yml, etc.)
@@ -401,17 +401,17 @@ Present the description and use the **AskUserQuestion** tool to confirm it's cor
 
 ### Step 4: Decide and confirm branch names
 
-For each repo, look at existing branches to detect the naming pattern:
+For each subproject, look at existing branches to detect the naming pattern:
 
 ` + "```bash" + `
-git -C <repo> branch -a --format='%(refname:short)' | head -30
+git -C <subproject> branch -a --format='%(refname:short)' | head -30
 ` + "```" + `
 
 Common patterns: ` + "`feat/...`" + `, ` + "`feature/...`" + `, ` + "`fix/...`" + `, ` + "`chore/...`" + `, flat names like ` + "`add-auth`" + `. Match whatever the repo already uses. If no clear pattern, use ` + "`feat/<slug>`" + `.
 
 Present the branch plan as a numbered list with the last option always being to commit directly to the current branch (usually main):
-- **Single repo**: "1. ` + "`<branch-name>`" + ` 2. Commit directly to ` + "`<current-branch>`" + `"
-- **Multi repo**: "1. ` + "`<branch-1>`" + ` / ` + "`<branch-2>`" + ` 2. Commit directly to current branches"
+- **Single subproject**: "1. ` + "`<branch-name>`" + ` 2. Commit directly to ` + "`<current-branch>`" + `"
+- **Multiple subprojects**: "1. ` + "`<branch-1>`" + ` / ` + "`<branch-2>`" + ` 2. Commit directly to current branches"
 
 Use **AskUserQuestion** to confirm. If the user wants changes, adjust and confirm again.
 
@@ -419,10 +419,10 @@ Use **AskUserQuestion** to confirm. If the user wants changes, adjust and confir
 
 If the user chose to commit directly to the current branch, skip branch creation entirely.
 
-Otherwise, for each repo, create and checkout the branch:
+Otherwise, for each subproject, create and checkout the branch:
 
 ` + "```bash" + `
-git -C <repo> checkout -b <branch-name>
+git -C <subproject> checkout -b <branch-name>
 ` + "```" + `
 
 ### Step 6: Save metadata
@@ -434,7 +434,7 @@ cw internal save-metadata '<json-string>'
 ` + "```" + `
 
 The JSON string should have these fields:
-- **title**: A short project title (derived from the repo or user's description)
+- **title**: A short project title (derived from the subproject or user's description)
 - **description**: The confirmed intention description from Step 3
 - **instructions**: Technical context and conventions for this project — structure, tech stack, conventions, build/test commands, coding patterns. This will be injected as a system prompt in future sessions, so write it as direct instructions to Claude (e.g., "This project uses Go 1.24 with Bubble Tea for TUI..." not "The project uses..."). Include everything you learned from mapping the codebase.
 
@@ -453,7 +453,7 @@ echo $CW_AUTO_SETUP
 
 ## Important
 
-- Derive everything technical from the repos. Only ask the user what they're working on.
+- Derive everything technical from the subprojects. Only ask the user what they're working on.
 - Do NOT mention internal files (metadata.json) to the user.
 - Do NOT write .claude/CLAUDE.md — everything goes into metadata.
 - Do NOT create any files — metadata is saved via the CLI command.
