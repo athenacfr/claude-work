@@ -166,8 +166,8 @@ func TestGeneratedCommandPlugins(t *testing.T) {
 		}
 	}
 
-	// Prompt commands should have PluginBody content
-	promptGenerated := []string{"mode.md", "permissions.md", "help.md", "new-task.md", "finish-task.md", "setup-project.md"}
+	// Prompt commands come from embedded .md files
+	promptGenerated := []string{"mode.md", "permissions.md", "help.md", "new-task.md", "finish-task.md", "setup-project.md", "yolo.md", "dev.md"}
 	for _, name := range promptGenerated {
 		path := filepath.Join(commandsDir, name)
 		data, err := os.ReadFile(path)

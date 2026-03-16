@@ -116,6 +116,7 @@ func installToDir(dest string) error {
 }
 
 // generatePluginsFromCommands creates .md plugin stubs from the command registry.
+// Commands that already have an embedded .md file are skipped.
 func generatePluginsFromCommands(dest string) ([]string, error) {
 	commandsDir := filepath.Join(dest, "plugins", "commands")
 	if err := os.MkdirAll(commandsDir, 0o755); err != nil {
@@ -126,10 +127,13 @@ func generatePluginsFromCommands(dest string) ([]string, error) {
 	for _, cmd := range commands.Public() {
 		mdPath := filepath.Join(commandsDir, cmd.Name+".md")
 
+		// Skip if an embedded .md file already exists for this command
+		if _, err := os.Stat(mdPath); err == nil {
+			continue
+		}
+
 		var body string
-		if cmd.PluginBody != "" {
-			body = cmd.PluginBody
-		} else if cmd.CLICommand != "" {
+		if cmd.CLICommand != "" {
 			body = fmt.Sprintf("Run `cw internal %s` using the Bash tool. Do not say anything else.", cmd.CLICommand)
 		} else {
 			continue

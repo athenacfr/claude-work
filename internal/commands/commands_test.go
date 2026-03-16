@@ -64,19 +64,14 @@ func TestCLICommandsHaveCLICommand(t *testing.T) {
 	}
 }
 
-func TestPromptCommandsHavePluginBody(t *testing.T) {
-	// Prompt-only commands should have PluginBody set
-	promptCommands := []string{"mode", "permissions", "help", "new-task", "finish-task", "setup-project", "yolo"}
+func TestPromptCommandsExist(t *testing.T) {
+	// Prompt-only commands (plugin body in embedded .md files) should be registered
+	promptCommands := []string{"mode", "permissions", "help", "new-task", "finish-task", "setup-project", "yolo", "dev"}
 
 	byName := commandsByName()
 	for _, name := range promptCommands {
-		cmd, ok := byName[name]
-		if !ok {
+		if _, ok := byName[name]; !ok {
 			t.Errorf("command %q not found", name)
-			continue
-		}
-		if cmd.PluginBody == "" {
-			t.Errorf("command %q should have PluginBody set", name)
 		}
 	}
 }
