@@ -1,6 +1,6 @@
 package commands
 
-// Command defines a cw command with its metadata for plugin generation.
+// Command defines a iara command with its metadata for plugin generation.
 type Command struct {
 	Name        string
 	Description string

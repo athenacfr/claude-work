@@ -46,7 +46,7 @@ No preset behavior. Raw Claude with no mode constraints.
 
 Display:
 ```
-Current mode: <mode from CW_MODE env var, or "code" if not set>
+Current mode: <mode from IARA_MODE env var, or "code" if not set>
 
 Available modes:
   code       — Write features, fix bugs (default)
@@ -66,7 +66,7 @@ Switch with: /mode <name>
 2. If invalid, show the available modes list
 3. If valid, run this exact command using the Bash tool:
    ```
-   cw internal mode-switch <mode-name>
+   iara internal mode-switch <mode-name>
    ```
    Do NOT do anything else after running the command. The session will restart and resume with the correct mode system prompt injected.
 
@@ -74,4 +74,4 @@ Switch with: /mode <name>
 
 - Mode switches trigger a session reload so the correct system prompt is injected
 - The session resumes automatically using the session ID — no context is lost
-- If CW_MODE env var is set (by the cw launcher), that was the initial mode
+- If IARA_MODE env var is set (by the iara launcher), that was the initial mode

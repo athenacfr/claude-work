@@ -1,10 +1,10 @@
 import { test, expect } from "@microsoft/tui-test";
-import { createTestEnv, CW_BIN, waitForReady } from "./helpers.js";
+import { createTestEnv, IARA_BIN, waitForReady } from "./helpers.js";
 
 const emptyEnv = createTestEnv();
 
 test.use({
-  program: { file: CW_BIN },
+  program: { file: IARA_BIN },
   rows: 24,
   columns: 80,
   env: emptyEnv.env,

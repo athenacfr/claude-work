@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ahtwr/cw/internal/config"
+	"github.com/ahtwr/iara/internal/config"
 )
 
 // mockClaudeBin compiles a tiny Go program that acts as a fake "claude" binary.
@@ -47,8 +47,8 @@ func main() {
 	for _, e := range os.Environ() {
 		if idx := indexOf(e, '='); idx >= 0 {
 			key := e[:idx]
-			if key == "CW_PID" || key == "CW_PROJECT" || key == "CW_PROJECT_DIR" ||
-				key == "CW_MODE" || key == "CW_AUTO_SETUP" || key == "CW_AUTO_COMPACT_LIMIT" ||
+			if key == "IARA_PID" || key == "IARA_PROJECT" || key == "IARA_PROJECT_DIR" ||
+				key == "IARA_MODE" || key == "IARA_AUTO_SETUP" || key == "IARA_AUTO_COMPACT_LIMIT" ||
 				key == "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD" ||
 				key == "MOCK_CLAUDE_OUTPUT" {
 				inv.Env[key] = e[idx+1:]
@@ -310,23 +310,23 @@ func TestLaunchSetsEnvVars(t *testing.T) {
 
 	inv := readInvocation(t, outFile)
 
-	if inv.Env["CW_PROJECT"] != "my-project" {
-		t.Errorf("CW_PROJECT = %q, want %q", inv.Env["CW_PROJECT"], "my-project")
+	if inv.Env["IARA_PROJECT"] != "my-project" {
+		t.Errorf("IARA_PROJECT = %q, want %q", inv.Env["IARA_PROJECT"], "my-project")
 	}
-	if inv.Env["CW_MODE"] != "research" {
-		t.Errorf("CW_MODE = %q, want %q", inv.Env["CW_MODE"], "research")
+	if inv.Env["IARA_MODE"] != "research" {
+		t.Errorf("IARA_MODE = %q, want %q", inv.Env["IARA_MODE"], "research")
 	}
-	if inv.Env["CW_AUTO_SETUP"] != "1" {
-		t.Errorf("CW_AUTO_SETUP = %q, want %q", inv.Env["CW_AUTO_SETUP"], "1")
+	if inv.Env["IARA_AUTO_SETUP"] != "1" {
+		t.Errorf("IARA_AUTO_SETUP = %q, want %q", inv.Env["IARA_AUTO_SETUP"], "1")
 	}
-	if inv.Env["CW_AUTO_COMPACT_LIMIT"] != "70" {
-		t.Errorf("CW_AUTO_COMPACT_LIMIT = %q, want %q", inv.Env["CW_AUTO_COMPACT_LIMIT"], "70")
+	if inv.Env["IARA_AUTO_COMPACT_LIMIT"] != "70" {
+		t.Errorf("IARA_AUTO_COMPACT_LIMIT = %q, want %q", inv.Env["IARA_AUTO_COMPACT_LIMIT"], "70")
 	}
 	if inv.Env["CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD"] != "1" {
 		t.Error("expected CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1")
 	}
-	if inv.Env["CW_PID"] == "" {
-		t.Error("expected CW_PID to be set")
+	if inv.Env["IARA_PID"] == "" {
+		t.Error("expected IARA_PID to be set")
 	}
 }
 
@@ -335,10 +335,10 @@ func TestLaunchMinimalEnv(t *testing.T) {
 	outFile := filepath.Join(t.TempDir(), "out.json")
 	t.Setenv("MOCK_CLAUDE_OUTPUT", outFile)
 	// Clear env vars that Launch conditionally sets, so we can test they're NOT added
-	t.Setenv("CW_PROJECT", "")
-	t.Setenv("CW_PROJECT_DIR", "")
-	t.Setenv("CW_MODE", "")
-	t.Setenv("CW_AUTO_SETUP", "")
+	t.Setenv("IARA_PROJECT", "")
+	t.Setenv("IARA_PROJECT_DIR", "")
+	t.Setenv("IARA_MODE", "")
+	t.Setenv("IARA_AUTO_SETUP", "")
 	t.Setenv("CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD", "")
 
 	err := Launch(LaunchConfig{WorkDir: t.TempDir()})
@@ -347,8 +347,8 @@ func TestLaunchMinimalEnv(t *testing.T) {
 	}
 
 	inv := readInvocation(t, outFile)
-	if inv.Env["CW_PID"] == "" {
-		t.Error("CW_PID should always be set")
+	if inv.Env["IARA_PID"] == "" {
+		t.Error("IARA_PID should always be set")
 	}
 }
 
@@ -390,7 +390,7 @@ func TestLaunchReloadSignal(t *testing.T) {
 	// Give the mock process time to start
 	time.Sleep(200 * time.Millisecond)
 
-	// Send SIGUSR1 to ourselves (simulating cw internal reload)
+	// Send SIGUSR1 to ourselves (simulating iara internal reload)
 	syscall.Kill(os.Getpid(), syscall.SIGUSR1)
 
 	select {
@@ -455,8 +455,8 @@ func TestLaunchSetsWorkDir(t *testing.T) {
 	}
 
 	inv := readInvocation(t, outFile)
-	if inv.Env["CW_PROJECT_DIR"] != "" {
-		// Without ProjectName, CW_PROJECT_DIR shouldn't be set
+	if inv.Env["IARA_PROJECT_DIR"] != "" {
+		// Without ProjectName, IARA_PROJECT_DIR shouldn't be set
 		// but WorkDir is set via cmd.Dir which we can't inspect from the child
 		// So this test just verifies Launch succeeds with a WorkDir
 	}

@@ -7,15 +7,15 @@ import { test, expect } from "@microsoft/tui-test";
 
 // tui-test compiles to a cache dir, so we resolve the binary path
 // relative to the project root using an env var or a known absolute path.
-const PROJECT_ROOT = process.env.CW_TEST_ROOT ?? join(dirname(fileURLToPath(import.meta.url)), "..");
+const PROJECT_ROOT = process.env.IARA_TEST_ROOT ?? join(dirname(fileURLToPath(import.meta.url)), "..");
 
-// Resolved path to the cw binary (built by `make build` before tests run)
-export const CW_BIN = join(PROJECT_ROOT, "bin", "cw");
+// Resolved path to the iara binary (built by `make build` before tests run)
+export const IARA_BIN = join(PROJECT_ROOT, "bin", "iara");
 
 // Create an isolated temp environment for a test suite.
 // Returns paths and a cleanup function.
 export function createTestEnv() {
-  const root = mkdtempSync(join(tmpdir(), "cw-test-"));
+  const root = mkdtempSync(join(tmpdir(), "iara-test-"));
   const projectsDir = join(root, "projects");
   const dataDir = join(root, "data");
   mkdirSync(projectsDir, { recursive: true });
@@ -25,9 +25,9 @@ export function createTestEnv() {
     projectsDir,
     dataDir,
     env: {
-      CW_PROJECTS_DIR: projectsDir,
-      CW_DATA_DIR: dataDir,
-      // Prevent cw from picking up real user config
+      IARA_PROJECTS_DIR: projectsDir,
+      IARA_DATA_DIR: dataDir,
+      // Prevent iara from picking up real user config
       HOME: root,
     },
     cleanup() {
@@ -37,7 +37,7 @@ export function createTestEnv() {
 }
 
 // Create a fake project inside the test env's projects dir.
-// Initializes a bare git repo so cw recognizes it.
+// Initializes a bare git repo so iara recognizes it.
 export function createFakeProject(
   projectsDir: string,
   name: string,
@@ -46,13 +46,13 @@ export function createFakeProject(
   const projectDir = join(projectsDir, name);
   mkdirSync(projectDir, { recursive: true });
 
-  // Create .cw metadata dir
-  const cwDir = join(projectDir, ".cw");
-  mkdirSync(cwDir, { recursive: true });
+  // Create .iara metadata dir
+  const iaraDir = join(projectDir, ".iara");
+  mkdirSync(iaraDir, { recursive: true });
 
   if (opts?.metadata) {
     writeFileSync(
-      join(cwDir, "metadata.json"),
+      join(iaraDir, "metadata.json"),
       JSON.stringify(opts.metadata, null, 2)
     );
   }
@@ -71,11 +71,11 @@ export function createFakeProject(
   return projectDir;
 }
 
-// Configure tui-test to launch the cw binary with isolated env.
+// Configure tui-test to launch the iara binary with isolated env.
 // Call this at the top of each test file.
-export function useCw(env: Record<string, string | undefined>) {
+export function useIara(env: Record<string, string | undefined>) {
   test.use({
-    program: { file: CW_BIN },
+    program: { file: IARA_BIN },
     rows: 24,
     columns: 80,
     env,

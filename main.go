@@ -16,21 +16,21 @@ import (
 
 	"encoding/json"
 
-	"github.com/ahtwr/cw/internal/claude"
-	"github.com/ahtwr/cw/internal/config"
-	"github.com/ahtwr/cw/internal/devlog"
-	cwembed "github.com/ahtwr/cw/internal/embed"
-	"github.com/ahtwr/cw/internal/env"
-	"github.com/ahtwr/cw/internal/paths"
-	"github.com/ahtwr/cw/internal/project"
-	"github.com/ahtwr/cw/internal/session"
-	"github.com/ahtwr/cw/internal/task"
-	"github.com/ahtwr/cw/internal/tui"
+	"github.com/ahtwr/iara/internal/claude"
+	"github.com/ahtwr/iara/internal/config"
+	"github.com/ahtwr/iara/internal/devlog"
+	iaraembed "github.com/ahtwr/iara/internal/embed"
+	"github.com/ahtwr/iara/internal/env"
+	"github.com/ahtwr/iara/internal/paths"
+	"github.com/ahtwr/iara/internal/project"
+	"github.com/ahtwr/iara/internal/session"
+	"github.com/ahtwr/iara/internal/task"
+	"github.com/ahtwr/iara/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func uninstall() {
-	binary := filepath.Join(paths.BinDir(), "cw")
+	binary := filepath.Join(paths.BinDir(), "iara")
 	dataDir := paths.DataDir()
 	projectsDir := paths.ProjectsDir()
 
@@ -89,23 +89,23 @@ func uninstall() {
 }
 
 func internalReload() {
-	pidStr := os.Getenv("CW_PID")
+	pidStr := os.Getenv("IARA_PID")
 	if pidStr == "" {
-		fmt.Fprintln(os.Stderr, "CW_PID not set — not running inside cw")
+		fmt.Fprintln(os.Stderr, "IARA_PID not set — not running inside iara")
 		os.Exit(1)
 	}
 	pid, err := strconv.Atoi(pidStr)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "invalid CW_PID: %s\n", pidStr)
+		fmt.Fprintf(os.Stderr, "invalid IARA_PID: %s\n", pidStr)
 		os.Exit(1)
 	}
 	proc, err := os.FindProcess(pid)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "cannot find cw process %d: %v\n", pid, err)
+		fmt.Fprintf(os.Stderr, "cannot find iara process %d: %v\n", pid, err)
 		os.Exit(1)
 	}
 	if err := proc.Signal(syscall.SIGUSR1); err != nil {
-		fmt.Fprintf(os.Stderr, "cannot signal cw process: %v\n", err)
+		fmt.Fprintf(os.Stderr, "cannot signal iara process: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -152,9 +152,9 @@ func internalPermissionsSwitch(value string) {
 }
 
 func internalSaveMetadata(jsonStr string) {
-	projectDir := os.Getenv("CW_PROJECT_DIR")
+	projectDir := os.Getenv("IARA_PROJECT_DIR")
 	if projectDir == "" {
-		fmt.Fprintln(os.Stderr, "CW_PROJECT_DIR not set — not running inside cw")
+		fmt.Fprintln(os.Stderr, "IARA_PROJECT_DIR not set — not running inside iara")
 		os.Exit(1)
 	}
 	if err := project.SaveMetadata(projectDir, jsonStr); err != nil {
@@ -194,14 +194,14 @@ func openFolder(dir string) {
 }
 
 func internalYoloStart() {
-	projectDir := os.Getenv("CW_PROJECT_DIR")
+	projectDir := os.Getenv("IARA_PROJECT_DIR")
 	if projectDir == "" {
-		fmt.Fprintln(os.Stderr, "CW_PROJECT_DIR not set — not running inside cw")
+		fmt.Fprintln(os.Stderr, "IARA_PROJECT_DIR not set — not running inside iara")
 		os.Exit(1)
 	}
-	matches, _ := filepath.Glob(filepath.Join(projectDir, ".cw", "yolo", "plan-*.md"))
+	matches, _ := filepath.Glob(filepath.Join(projectDir, ".iara", "yolo", "plan-*.md"))
 	if len(matches) == 0 {
-		fmt.Fprintln(os.Stderr, "No yolo plan found in "+filepath.Join(projectDir, ".cw", "yolo"))
+		fmt.Fprintln(os.Stderr, "No yolo plan found in "+filepath.Join(projectDir, ".iara", "yolo"))
 		os.Exit(1)
 	}
 	planPath, _ := filepath.Abs(matches[0])
@@ -224,9 +224,9 @@ func internalYoloStop() {
 }
 
 func internalSaveTask(jsonStr string) {
-	projectDir := os.Getenv("CW_PROJECT_DIR")
+	projectDir := os.Getenv("IARA_PROJECT_DIR")
 	if projectDir == "" {
-		fmt.Fprintln(os.Stderr, "CW_PROJECT_DIR not set — not running inside cw")
+		fmt.Fprintln(os.Stderr, "IARA_PROJECT_DIR not set — not running inside iara")
 		os.Exit(1)
 	}
 
@@ -270,10 +270,10 @@ func internalSaveTask(jsonStr string) {
 }
 
 func internalFinishTask() {
-	projectDir := os.Getenv("CW_PROJECT_DIR")
-	taskID := os.Getenv("CW_TASK_ID")
+	projectDir := os.Getenv("IARA_PROJECT_DIR")
+	taskID := os.Getenv("IARA_TASK_ID")
 	if projectDir == "" || taskID == "" {
-		fmt.Fprintln(os.Stderr, "CW_PROJECT_DIR and CW_TASK_ID must be set")
+		fmt.Fprintln(os.Stderr, "IARA_PROJECT_DIR and IARA_TASK_ID must be set")
 		os.Exit(1)
 	}
 
@@ -327,28 +327,28 @@ func main() {
 			return
 		case "mode-switch":
 			if len(os.Args) < 4 {
-				fmt.Fprintln(os.Stderr, "usage: cw internal mode-switch <mode>")
+				fmt.Fprintln(os.Stderr, "usage: iara internal mode-switch <mode>")
 				os.Exit(1)
 			}
 			internalModeSwitch(os.Args[3])
 			return
 		case "permissions-switch":
 			if len(os.Args) < 4 {
-				fmt.Fprintln(os.Stderr, "usage: cw internal permissions-switch <bypass|normal>")
+				fmt.Fprintln(os.Stderr, "usage: iara internal permissions-switch <bypass|normal>")
 				os.Exit(1)
 			}
 			internalPermissionsSwitch(os.Args[3])
 			return
 		case "summarize":
 			if len(os.Args) < 6 {
-				fmt.Fprintln(os.Stderr, "usage: cw internal summarize <sessionID> <workDir> <projectDir>")
+				fmt.Fprintln(os.Stderr, "usage: iara internal summarize <sessionID> <workDir> <projectDir>")
 				os.Exit(1)
 			}
 			session.RunSummarize(os.Args[3], os.Args[4], os.Args[5])
 			return
 		case "save-metadata":
 			if len(os.Args) < 4 {
-				fmt.Fprintln(os.Stderr, "usage: cw internal save-metadata '<json>'")
+				fmt.Fprintln(os.Stderr, "usage: iara internal save-metadata '<json>'")
 				os.Exit(1)
 			}
 			internalSaveMetadata(os.Args[3])
@@ -361,7 +361,7 @@ func main() {
 			return
 		case "save-task":
 			if len(os.Args) < 4 {
-				fmt.Fprintln(os.Stderr, "usage: cw internal save-task '<json>'")
+				fmt.Fprintln(os.Stderr, "usage: iara internal save-task '<json>'")
 				os.Exit(1)
 			}
 			internalSaveTask(os.Args[3])
@@ -373,7 +373,7 @@ func main() {
 	}
 
 	// Extract embedded files (plugins, modes, hooks)
-	if err := cwembed.Install(); err != nil {
+	if err := iaraembed.Install(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error installing embedded files: %v\n", err)
 		os.Exit(1)
 	}
@@ -391,10 +391,10 @@ func main() {
 	for {
 		var m tui.Model
 		if returnProject != nil {
-			m = tui.NewModelWithProject(cwembed.PluginDir(), returnProject, returnBypass)
+			m = tui.NewModelWithProject(iaraembed.PluginDir(), returnProject, returnBypass)
 			returnProject = nil
 		} else {
-			m = tui.NewModel(cwembed.PluginDir())
+			m = tui.NewModel(iaraembed.PluginDir())
 		}
 		p := tea.NewProgram(m, tea.WithAltScreen())
 
@@ -420,7 +420,7 @@ func main() {
 		// Resolve sessions directory — task-scoped if available, fallback to project-level
 		sessionsDir := cfg.SessionsDir
 		if sessionsDir == "" {
-			sessionsDir = filepath.Join(cfg.WorkDir, ".cw", "sessions")
+			sessionsDir = filepath.Join(cfg.WorkDir, ".iara", "sessions")
 		}
 
 		// Create or load the CW session for this launch
@@ -435,7 +435,7 @@ func main() {
 					cfg.Mode = m
 				}
 				cfg.SkipPermissions = s.SkipPermissions
-				// Same ID is used for both cw and Claude --resume
+				// Same ID is used for both iara and Claude --resume
 				cfg.ResumeSessionID = s.ID
 			}
 		}
@@ -494,9 +494,9 @@ func main() {
 				}
 
 				if globalSettings.EnableHooks {
-					project.EnsureHooks(cfg.ProjectName, cwembed.Dir())
+					project.EnsureHooks(cfg.ProjectName, iaraembed.Dir())
 				}
-				project.EnsureAgents(cfg.ProjectName, cwembed.Dir())
+				project.EnsureAgents(cfg.ProjectName, iaraembed.Dir())
 				project.SyncCommands(cfg.ProjectName)
 
 				// Sync env files: merge .env.<repo>.global + .env.<repo>.override → repo/.env
@@ -531,8 +531,8 @@ func main() {
 			}
 
 			// Task-scoped base dir for dev logs and config.
-			// sessionsDir is .cw/tasks/<id>/sessions/ — parent is the task dir.
-			// For non-task (legacy fallback), sessionsDir is .cw/sessions/ — parent is .cw/
+			// sessionsDir is .iara/tasks/<id>/sessions/ — parent is the task dir.
+			// For non-task (legacy fallback), sessionsDir is .iara/sessions/ — parent is .iara/
 			taskBaseDir := filepath.Dir(sessionsDir)
 
 			// Manage dev logs: ensure dir exists, truncate oversized logs
@@ -547,7 +547,7 @@ func main() {
 
 			// Set session IDs on launch config
 			if cwSession != nil {
-				cfg.CWSessionID = cwSession.ID
+				cfg.IARASessionID = cwSession.ID
 				if isNewSession {
 					cfg.NewSessionID = cwSession.ID
 					isNewSession = false
@@ -595,7 +595,7 @@ func main() {
 				}
 				// Clean up dev logs and yolo plan files
 				devlog.Cleanup(taskBaseDir)
-				if planFiles, err := filepath.Glob(filepath.Join(cfg.WorkDir, ".cw", "yolo", "plan-*.md")); err == nil {
+				if planFiles, err := filepath.Glob(filepath.Join(cfg.WorkDir, ".iara", "yolo", "plan-*.md")); err == nil {
 					for _, f := range planFiles {
 						os.Remove(f)
 					}
@@ -706,7 +706,7 @@ func main() {
 }
 
 // generateSessionID creates a random UUID v4 session ID.
-// This ID is shared between cw and Claude via --session-id.
+// This ID is shared between iara and Claude via --session-id.
 func generateSessionID() string {
 	b := make([]byte, 16)
 	rand.Read(b)

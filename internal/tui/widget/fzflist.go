@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ahtwr/cw/internal/tui/style"
+	"github.com/ahtwr/iara/internal/tui/style"
 	"github.com/charmbracelet/lipgloss"
 	xansi "github.com/charmbracelet/x/ansi"
 	"github.com/sahilm/fuzzy"

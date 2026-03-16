@@ -4,10 +4,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ahtwr/cw/internal/paths"
+	"github.com/ahtwr/iara/internal/paths"
 )
 
-// EnsureAgents copies agent definition files from the cw data directory
+// EnsureAgents copies agent definition files from the iara data directory
 // to the project's .claude/agents/ directory.
 func EnsureAgents(name, cwRoot string) error {
 	projectDir := filepath.Join(paths.ProjectsDir(), name)

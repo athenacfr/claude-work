@@ -12,7 +12,7 @@ const (
 )
 
 // Dir returns the log directory for a given base directory.
-// The base is typically a task dir (.cw/tasks/<id>/) or project dir (.cw/).
+// The base is typically a task dir (.iara/tasks/<id>/) or project dir (.iara/).
 func Dir(baseDir string) string {
 	return filepath.Join(baseDir, logDirName)
 }

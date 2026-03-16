@@ -48,7 +48,7 @@ Switch with: /permissions <bypass|normal>
 2. If invalid, show usage
 3. If valid, run this exact command using the Bash tool:
    ```
-   cw internal permissions-switch <value>
+   iara internal permissions-switch <value>
    ```
    Do NOT do anything else after running the command. The session will restart and resume with the correct permission setting applied.
 
@@ -57,4 +57,4 @@ Switch with: /permissions <bypass|normal>
 - Permission switches trigger a session reload
 - The session resumes automatically using the session ID — no context is lost
 - This is a **temporary** change for the current session only
-- To permanently change the default, use the `p` key on the project list screen in the cw TUI
+- To permanently change the default, use the `p` key on the project list screen in the iara TUI

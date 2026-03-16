@@ -8,9 +8,9 @@ Complete the current task by cleaning up worktrees and marking it as done.
 
 ## Environment
 
-- `CW_PROJECT_DIR` — the project root directory
-- `CW_TASK_ID` — the current task ID
-- `CW_TASK_NAME` — the current task name
+- `IARA_PROJECT_DIR` — the project root directory
+- `IARA_TASK_ID` — the current task ID
+- `IARA_TASK_NAME` — the current task name
 
 ## Process
 
@@ -19,7 +19,7 @@ Complete the current task by cleaning up worktrees and marking it as done.
 Check all repos in the worktree for dirty state:
 
 ```bash
-for dir in "$CW_PROJECT_DIR"/.worktrees/"$CW_TASK_NAME"/*/; do
+for dir in "$IARA_PROJECT_DIR"/.worktrees/"$IARA_TASK_NAME"/*/; do
   if [ -d "$dir/.git" ] || [ -f "$dir/.git" ]; then
     echo "=== $(basename "$dir") ==="
     git -C "$dir" status --porcelain
@@ -39,7 +39,7 @@ Use **AskUserQuestion**: "Ready to finish task '<task-name>'? The branch will be
 ### Step 3: Finish the task
 
 ```bash
-cw internal finish-task
+iara internal finish-task
 ```
 
 This removes the worktrees and marks the task as completed.
@@ -47,7 +47,7 @@ This removes the worktrees and marks the task as completed.
 ### Step 4: Return to task selection
 
 ```bash
-cw internal reload
+iara internal reload
 ```
 
 ## Important

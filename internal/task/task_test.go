@@ -103,7 +103,7 @@ func TestList(t *testing.T) {
 	}
 
 	// Create a "default" directory that should be skipped
-	defaultDir := filepath.Join(dir, ".cw", "tasks", "default", "sessions")
+	defaultDir := filepath.Join(dir, ".iara", "tasks", "default", "sessions")
 	if err := os.MkdirAll(defaultDir, 0755); err != nil {
 		t.Fatalf("create default dir: %v", err)
 	}
@@ -195,7 +195,7 @@ func TestSetStatus(t *testing.T) {
 
 func TestSessionsDir(t *testing.T) {
 	got := SessionsDir("/projects/myproj", "abc-123")
-	want := filepath.Join("/projects/myproj", ".cw", "tasks", "abc-123", "sessions")
+	want := filepath.Join("/projects/myproj", ".iara", "tasks", "abc-123", "sessions")
 	if got != want {
 		t.Fatalf("SessionsDir: got %q, want %q", got, want)
 	}
@@ -203,7 +203,7 @@ func TestSessionsDir(t *testing.T) {
 
 func TestDefaultSessionsDir(t *testing.T) {
 	got := DefaultSessionsDir("/projects/myproj")
-	want := filepath.Join("/projects/myproj", ".cw", "tasks", "default", "sessions")
+	want := filepath.Join("/projects/myproj", ".iara", "tasks", "default", "sessions")
 	if got != want {
 		t.Fatalf("DefaultSessionsDir: got %q, want %q", got, want)
 	}
@@ -211,7 +211,7 @@ func TestDefaultSessionsDir(t *testing.T) {
 
 func TestTaskDir(t *testing.T) {
 	got := TaskDir("/projects/myproj", "abc-123")
-	want := filepath.Join("/projects/myproj", ".cw", "tasks", "abc-123")
+	want := filepath.Join("/projects/myproj", ".iara", "tasks", "abc-123")
 	if got != want {
 		t.Fatalf("TaskDir: got %q, want %q", got, want)
 	}

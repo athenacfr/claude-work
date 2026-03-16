@@ -8,7 +8,7 @@ import (
 
 func TestSaveAndLoadGlobalSettings(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("CW_DATA_DIR", dir)
+	t.Setenv("IARA_DATA_DIR", dir)
 
 	s := Settings{
 		BypassPermissions:   true,
@@ -41,7 +41,7 @@ func TestSaveAndLoadGlobalSettings(t *testing.T) {
 
 func TestLoadGlobalSettingsDefault(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("CW_DATA_DIR", dir)
+	t.Setenv("IARA_DATA_DIR", dir)
 
 	// No settings file exists — should return default
 	s := LoadGlobalSettings()
@@ -58,7 +58,7 @@ func TestLoadGlobalSettingsDefault(t *testing.T) {
 
 func TestLoadGlobalSettingsCorrupted(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("CW_DATA_DIR", dir)
+	t.Setenv("IARA_DATA_DIR", dir)
 
 	os.WriteFile(filepath.Join(dir, "settings.json"), []byte("not json"), 0644)
 
@@ -70,7 +70,7 @@ func TestLoadGlobalSettingsCorrupted(t *testing.T) {
 
 func TestSaveGlobalSettingsOverwrites(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("CW_DATA_DIR", dir)
+	t.Setenv("IARA_DATA_DIR", dir)
 
 	SaveGlobalSettings(Settings{BypassPermissions: true})
 	SaveGlobalSettings(Settings{BypassPermissions: false, AutoCompactLimit: 40})
@@ -86,7 +86,7 @@ func TestSaveGlobalSettingsOverwrites(t *testing.T) {
 
 func TestLoadGlobalSettingsMigration(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("CW_DATA_DIR", dir)
+	t.Setenv("IARA_DATA_DIR", dir)
 
 	// Write old-format settings (only bypass_permissions and auto_compact_limit)
 	old := []byte(`{"bypass_permissions": false, "auto_compact_limit": 50}`)
@@ -128,7 +128,7 @@ func TestDefaultSettings(t *testing.T) {
 }
 
 func TestGlobalSettingsPath(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "/test/data")
+	t.Setenv("IARA_DATA_DIR", "/test/data")
 	got := globalSettingsPath()
 	if got != "/test/data/settings.json" {
 		t.Errorf("globalSettingsPath = %q, want %q", got, "/test/data/settings.json")

@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ahtwr/cw/internal/commands"
-	"github.com/ahtwr/cw/internal/paths"
+	"github.com/ahtwr/iara/internal/commands"
+	"github.com/ahtwr/iara/internal/paths"
 )
 
 //go:embed all:files
@@ -134,7 +134,7 @@ func generatePluginsFromCommands(dest string) ([]string, error) {
 
 		var body string
 		if cmd.CLICommand != "" {
-			body = fmt.Sprintf("Run `cw internal %s` using the Bash tool. Do not say anything else.", cmd.CLICommand)
+			body = fmt.Sprintf("Run `iara internal %s` using the Bash tool. Do not say anything else.", cmd.CLICommand)
 		} else {
 			continue
 		}

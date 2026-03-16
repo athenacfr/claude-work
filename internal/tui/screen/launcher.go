@@ -5,11 +5,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ahtwr/cw/internal/config"
-	"github.com/ahtwr/cw/internal/session"
-	"github.com/ahtwr/cw/internal/tui/shared"
-	"github.com/ahtwr/cw/internal/tui/style"
-	"github.com/ahtwr/cw/internal/tui/widget"
+	"github.com/ahtwr/iara/internal/config"
+	"github.com/ahtwr/iara/internal/session"
+	"github.com/ahtwr/iara/internal/tui/shared"
+	"github.com/ahtwr/iara/internal/tui/style"
+	"github.com/ahtwr/iara/internal/tui/widget"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

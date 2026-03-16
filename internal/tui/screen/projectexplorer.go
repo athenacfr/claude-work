@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ahtwr/cw/internal/git"
-	"github.com/ahtwr/cw/internal/paths"
-	"github.com/ahtwr/cw/internal/project"
-	"github.com/ahtwr/cw/internal/tui/shared"
-	"github.com/ahtwr/cw/internal/tui/style"
-	"github.com/ahtwr/cw/internal/tui/widget"
+	"github.com/ahtwr/iara/internal/git"
+	"github.com/ahtwr/iara/internal/paths"
+	"github.com/ahtwr/iara/internal/project"
+	"github.com/ahtwr/iara/internal/tui/shared"
+	"github.com/ahtwr/iara/internal/tui/style"
+	"github.com/ahtwr/iara/internal/tui/widget"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )

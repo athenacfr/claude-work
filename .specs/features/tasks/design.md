@@ -45,23 +45,23 @@
 
 ```
 TUI: "+ New Task" selected
-  → LaunchConfig.Prompt = "/cw:new-task"
+  → LaunchConfig.Prompt = "/iara:new-task"
   → LaunchConfig.WorkDir = <project-root> (temporary, skill creates worktree)
-  → Claude runs /cw:new-task skill:
+  → Claude runs /iara:new-task skill:
       1. Maps codebase (reads from main repos)
       2. Asks intent, confirms description
       3. Proposes branch name, confirms
-      4. Calls: cw internal save-task '{"name":"add-auth","description":"...","branch":"feat/add-auth"}'
-         → internal/task/ creates task.json in .cw/tasks/<id>/
+      4. Calls: iara internal save-task '{"name":"add-auth","description":"...","branch":"feat/add-auth"}'
+         → internal/task/ creates task.json in .iara/tasks/<id>/
          → internal/task/ creates worktrees:
             - git worktree add .worktrees/<slug>/<repo> -b <branch> (for each repo)
             - mkdir .worktrees/<slug>/.claude/rules/
             - symlink .worktrees/<slug>/.claude/rules/PROJECT.md → project CLAUDE.md
             - writes .worktrees/<slug>/CLAUDE.md (task instructions)
-      5. Calls: cw internal new-session (reloads into worktree context)
-  → cw re-launches Claude with:
+      5. Calls: iara internal new-session (reloads into worktree context)
+  → iara re-launches Claude with:
       WorkDir = .worktrees/<slug>/
-      SessionsDir = .cw/tasks/<id>/sessions/
+      SessionsDir = .iara/tasks/<id>/sessions/
       CW_TASK_ID, CW_TASK_NAME set
 ```
 
@@ -80,7 +80,7 @@ TUI: task selected → TaskSelectedMsg
 
 ```
 TUI: "● main" selected → TaskSelectedMsg (default=true)
-  → navigate to launcher screen with sessionsDir = .cw/tasks/default/sessions/
+  → navigate to launcher screen with sessionsDir = .iara/tasks/default/sessions/
   → user picks mode + session → launch Claude
   → WorkDir = <project-root> (same as today)
   → env.Sync(projectDir, repoNames) (same as today)
@@ -89,14 +89,14 @@ TUI: "● main" selected → TaskSelectedMsg (default=true)
 ### Finish Task
 
 ```
-Claude: user runs /cw:finish-task
+Claude: user runs /iara:finish-task
   → skill checks dirty files
   → confirms with user
-  → calls: cw internal finish-task
+  → calls: iara internal finish-task
     → git worktree remove for each repo
     → removes .worktrees/<slug>/ directory
     → marks task status = "completed" in task.json
-  → signals sideband reload → cw returns to TUI task select
+  → signals sideband reload → iara returns to TUI task select
 ```
 
 ## New Package: internal/task/
@@ -179,7 +179,7 @@ ProjectSelectedMsg:
   After:  → screenTaskSelect (always)
 
 TaskSelectedMsg (default=false, new task):
-  → quit, launch Claude with /cw:new-task
+  → quit, launch Claude with /iara:new-task
 
 TaskSelectedMsg (default=false, existing task):
   → screenLauncher with sessionsDir from task
@@ -201,7 +201,7 @@ Minimal — just change path computation:
 
 ```go
 // Before: func sessionsDir(projectDir string) string {
-//     return filepath.Join(projectDir, ".cw", "sessions")
+//     return filepath.Join(projectDir, ".iara", "sessions")
 // }
 
 // After: sessionsDir is passed by caller. Remove internal path computation.
@@ -222,8 +222,8 @@ type LaunchConfig struct {
 ## Migration Strategy
 
 On first task list load for a project:
-1. Check if `.cw/sessions/` exists and `.cw/tasks/default/sessions/` does not
-2. If so, move `.cw/sessions/` → `.cw/tasks/default/sessions/`
+1. Check if `.iara/sessions/` exists and `.iara/tasks/default/sessions/` does not
+2. If so, move `.iara/sessions/` → `.iara/tasks/default/sessions/`
 3. One-time, transparent to user
 
 ## Git Pull Timing

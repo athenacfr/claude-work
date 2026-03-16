@@ -4,11 +4,11 @@
 
 Traditional IDEs are built around human editing — syntax highlighting, autocompletion, file trees. But when an AI agent writes most of the code, the bottleneck shifts from typing to context. The editor doesn't matter as much as what the agent knows when it starts working.
 
-cw treats Claude Code as the primary development environment. The TUI exists only to set up context — projects, repos, tasks, modes — and then get out of the way. Once Claude launches, it has everything it needs: the project structure, the right behavioral mode, isolated worktrees for the current task, and session history to resume from.
+iara treats Claude Code as the primary development environment. The TUI exists only to set up context — projects, repos, tasks, modes — and then get out of the way. Once Claude launches, it has everything it needs: the project structure, the right behavioral mode, isolated worktrees for the current task, and session history to resume from.
 
 ## Projects, not files
 
-Most development tools operate at the file or repo level. But real work spans multiple repositories — a backend, a frontend, shared libraries, infrastructure. cw organizes work into projects that group related repos together, so Claude sees the full picture.
+Most development tools operate at the file or repo level. But real work spans multiple repositories — a backend, a frontend, shared libraries, infrastructure. iara organizes work into projects that group related repos together, so Claude sees the full picture.
 
 ## Tasks as isolation boundaries
 
@@ -20,9 +20,9 @@ Rather than repeatedly instructing Claude how to behave, modes encode behavioral
 
 ## Convention over configuration
 
-cw makes decisions so you don't have to:
+iara makes decisions so you don't have to:
 
-- Projects go in `~/cw/projects/`
+- Projects go in `~/iara/projects/`
 - Dev servers get deterministic ports based on project name
 - Environment files layer automatically (global + override)
 - First launch triggers auto-setup to map the codebase
@@ -36,7 +36,7 @@ The TUI is intentionally minimal. It handles project selection, task management,
 
 ## Slash commands extend the session
 
-Once inside Claude, slash commands (`/dev`, `/yolo`, `/new-task`, `/mode`) let you reshape the session without leaving it. These commands call back into the cw binary to modify state — switching modes, managing dev servers, creating tasks — keeping the feedback loop tight.
+Once inside Claude, slash commands (`/dev`, `/yolo`, `/new-task`, `/mode`) let you reshape the session without leaving it. These commands call back into the iara binary to modify state — switching modes, managing dev servers, creating tasks — keeping the feedback loop tight.
 
 ## Autonomous when you want it
 

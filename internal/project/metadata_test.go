@@ -18,7 +18,7 @@ func TestSaveMetadataValid(t *testing.T) {
 	}
 
 	// Verify file was created
-	data, err := os.ReadFile(filepath.Join(dir, ".cw", "metadata.json"))
+	data, err := os.ReadFile(filepath.Join(dir, ".iara", "metadata.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,12 +85,12 @@ func TestSaveMetadataCreatesDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	info, err := os.Stat(filepath.Join(dir, ".cw"))
+	info, err := os.Stat(filepath.Join(dir, ".iara"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !info.IsDir() {
-		t.Error("expected .cw to be a directory")
+		t.Error("expected .iara to be a directory")
 	}
 }
 
@@ -152,8 +152,8 @@ func TestLoadMetadataAtNotFound(t *testing.T) {
 
 func TestLoadMetadataAtCorrupted(t *testing.T) {
 	dir := t.TempDir()
-	os.MkdirAll(filepath.Join(dir, ".cw"), 0755)
-	os.WriteFile(filepath.Join(dir, ".cw", "metadata.json"), []byte("not json"), 0644)
+	os.MkdirAll(filepath.Join(dir, ".iara"), 0755)
+	os.WriteFile(filepath.Join(dir, ".iara", "metadata.json"), []byte("not json"), 0644)
 
 	_, err := LoadMetadataAt(dir)
 	if err == nil {

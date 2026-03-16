@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ahtwr/cw/internal/paths"
+	"github.com/ahtwr/iara/internal/paths"
 )
 
 // EnvsDir returns the global envs directory.

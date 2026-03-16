@@ -7,11 +7,11 @@ import (
 	"testing"
 )
 
-// setTestProjectsDir overrides CW_PROJECTS_DIR for isolated testing.
+// setTestProjectsDir overrides IARA_PROJECTS_DIR for isolated testing.
 func setTestProjectsDir(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	t.Setenv("CW_PROJECTS_DIR", dir)
+	t.Setenv("IARA_PROJECTS_DIR", dir)
 	return dir
 }
 
@@ -194,7 +194,7 @@ func TestListSkipsFiles(t *testing.T) {
 }
 
 func TestListProjectsDirNotExist(t *testing.T) {
-	t.Setenv("CW_PROJECTS_DIR", "/tmp/nonexistent-cw-projects-"+filepath.Base(t.TempDir()))
+	t.Setenv("IARA_PROJECTS_DIR", "/tmp/nonexistent-iara-projects-"+filepath.Base(t.TempDir()))
 
 	projects, err := List()
 	if err != nil {

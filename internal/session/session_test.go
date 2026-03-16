@@ -340,7 +340,7 @@ func TestExcerptFromJSONL(t *testing.T) {
 
 	lines := []string{
 		`{"type":"progress","slug":"calm-exploring-turtle"}`,
-		`{"type":"user","message":{"role":"user","content":"<command-message>cw:yolo</command-message>"}}`,
+		`{"type":"user","message":{"role":"user","content":"<command-message>iara:yolo</command-message>"}}`,
 		`{"type":"user","message":{"role":"user","content":"fix the login page"}}`,
 		`{"type":"assistant","message":{"role":"assistant","content":"I'll fix the login page now."}}`,
 		`{"type":"user","message":{"role":"user","content":"also update the tests"}}`,
@@ -359,7 +359,7 @@ func TestExcerptFromJSONL(t *testing.T) {
 		t.Errorf("expected second user message in excerpt, got %q", got)
 	}
 	// Command messages should be skipped
-	if strings.Contains(got, "cw:yolo") {
+	if strings.Contains(got, "iara:yolo") {
 		t.Errorf("excerpt should not contain command messages, got %q", got)
 	}
 }

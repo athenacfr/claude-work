@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ahtwr/cw/internal/git"
+	"github.com/ahtwr/iara/internal/git"
 )
 
 // SetupWorktree creates git worktrees for each repo and sets up the Claude context files.

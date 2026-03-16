@@ -1,5 +1,5 @@
 ---
-description: Map the codebase and save project metadata for a new cw project.
+description: Map the codebase and save project metadata for a new iara project.
 ---
 
 # Setup Project
@@ -30,7 +30,7 @@ Wait for their answer.
 Build a JSON object and run:
 
 ```bash
-cw internal save-metadata '{"title":"<title>","description":"<description>","instructions":"<technical-context>"}'
+iara internal save-metadata '{"title":"<title>","description":"<description>","instructions":"<technical-context>"}'
 ```
 
 Fields:
@@ -43,11 +43,11 @@ Fields:
 Check:
 
 ```bash
-echo $CW_AUTO_SETUP
+echo $IARA_AUTO_SETUP
 ```
 
-- If `1`: Say "Project set up! Starting fresh session..." then run `cw internal new-session`
-- Otherwise: Say "Project set up! Reloading..." then run `cw internal reload`
+- If `1`: Say "Project set up! Starting fresh session..." then run `iara internal new-session`
+- Otherwise: Say "Project set up! Reloading..." then run `iara internal reload`
 
 ## Important
 

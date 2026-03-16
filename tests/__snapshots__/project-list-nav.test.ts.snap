@@ -2,6 +2,7 @@
 
 exports[`Project List — navigation › collapses repos by toggling t | 1`] = String.raw`
 ╭────────────────────────────────────────────────────────────────────────────────╮
+│PROJECTS                                                                        │
 │                                                                                │
 │┌──────────────────────────────┐│ alpha-project                                 │
 ││ search...                    ││ opened just now                               │
@@ -13,7 +14,6 @@ exports[`Project List — navigation › collapses repos by toggling t | 1`] = S
 │                                │   backend on detached ✓                       │
 │                                │                                               │
 │                                │   frontend on detached ✓                      │
-│                                │                                               │
 │                                │                                               │
 │                                │                                               │
 │                                │                                               │
@@ -60,7 +60,6 @@ exports[`Project List — navigation › enters search mode with s and filters |
 
 exports[`Project List — navigation › expands with l and collapses with h | 1`] = String.raw`
 ╭────────────────────────────────────────────────────────────────────────────────╮
-│PROJECTS                                                                        │
 │                                                                                │
 │┌──────────────────────────────┐│ alpha-project                                 │
 ││ search...                    ││ opened just now                               │
@@ -72,6 +71,7 @@ exports[`Project List — navigation › expands with l and collapses with h | 1
 │                                │   backend on detached ✓                       │
 │                                │                                               │
 │                                │   frontend on detached ✓                      │
+│                                │                                               │
 │                                │                                               │
 │                                │                                               │
 │                                │                                               │

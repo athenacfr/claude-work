@@ -4,12 +4,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ahtwr/cw/internal/claude"
-	"github.com/ahtwr/cw/internal/git"
-	"github.com/ahtwr/cw/internal/project"
-	"github.com/ahtwr/cw/internal/tui/shared"
-	"github.com/ahtwr/cw/internal/tui/screen"
-	"github.com/ahtwr/cw/internal/tui/style"
+	"github.com/ahtwr/iara/internal/claude"
+	"github.com/ahtwr/iara/internal/git"
+	"github.com/ahtwr/iara/internal/project"
+	"github.com/ahtwr/iara/internal/tui/shared"
+	"github.com/ahtwr/iara/internal/tui/screen"
+	"github.com/ahtwr/iara/internal/tui/style"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -135,7 +135,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// No metadata → auto-setup project
 		if !project.HasMetadata(msg.Project.Name) {
-			m.launchConfig.Prompt = "/cw:setup-project"
+			m.launchConfig.Prompt = "/iara:setup-project"
 			m.launchConfig.SkipPermissions = true
 			m.launchConfig.AutoSetup = true
 			return m, tea.Quit
@@ -149,8 +149,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case shared.TaskSelectedMsg:
 		if msg.IsNew {
-			// Launch Claude with /cw:new-task
-			m.launchConfig.Prompt = "/cw:new-task"
+			// Launch Claude with /iara:new-task
+			m.launchConfig.Prompt = "/iara:new-task"
 			m.launchConfig.SkipPermissions = true
 			m.launchConfig.AutoSetup = true
 			return m, tea.Quit

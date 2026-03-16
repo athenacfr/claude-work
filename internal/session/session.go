@@ -15,12 +15,12 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/ahtwr/cw/internal/paths"
+	"github.com/ahtwr/iara/internal/paths"
 )
 
-// Session represents a cw-managed session stored in <project>/.cw/sessions/.
+// Session represents an iara-managed session stored in <project>/.iara/sessions/.
 // The ID is a UUID that is shared with Claude via --session-id on first launch,
-// so both cw and Claude use the same identifier for the session.
+// so both iara and Claude use the same identifier for the session.
 type Session struct {
 	ID              string `json:"id"`
 	Mode            string `json:"mode"`
@@ -119,9 +119,9 @@ func Delete(sessionsDir, id string) error {
 	return os.Remove(sessionPath(sessionsDir, id))
 }
 
-// ProjectSessionsDir returns the .cw/sessions/ path for a project name.
+// ProjectSessionsDir returns the .iara/sessions/ path for a project name.
 func ProjectSessionsDir(name string) string {
-	return filepath.Join(paths.ProjectsDir(), name, ".cw", "sessions")
+	return filepath.Join(paths.ProjectsDir(), name, ".iara", "sessions")
 }
 
 // RelativeTime returns a human-readable relative time string.
@@ -237,7 +237,7 @@ func GenerateSummaryBackground(sessionID, workDir, sessionsDir string) <-chan st
 	return done
 }
 
-// RunSummarize is the handler for "cw internal summarize". It generates
+// RunSummarize is the handler for "iara internal summarize". It generates
 // a summary for the given session and saves it to disk.
 func RunSummarize(sessionID, workDir, sessionsDir string) {
 	runSummarize(sessionID, workDir, sessionsDir)

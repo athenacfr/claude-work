@@ -1,4 +1,4 @@
-//# hash=7804668a5c697688013ffe217d7d08a0
+//# hash=2ab30ce26f248e98eb4cfea657a8b964
 //# sourceMappingURL=snapshots.test.js.map
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -130,7 +130,7 @@ function _ts_generator(thisArg, body) {
     }
 }
 import { test, expect } from "@microsoft/tui-test";
-import { createTestEnv, createFakeProject, CW_BIN, waitForReady } from "./helpers.js";
+import { createTestEnv, createFakeProject, IARA_BIN, waitForReady } from "./helpers.js";
 var env = createTestEnv();
 createFakeProject(env.projectsDir, "snap-project", {
     repos: [
@@ -144,7 +144,7 @@ createFakeProject(env.projectsDir, "snap-project", {
 });
 test.use({
     program: {
-        file: CW_BIN
+        file: IARA_BIN
     },
     rows: 24,
     columns: 80,

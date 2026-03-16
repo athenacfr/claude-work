@@ -1,9 +1,9 @@
 package shared
 
 import (
-	"github.com/ahtwr/cw/internal/config"
-	"github.com/ahtwr/cw/internal/project"
-	"github.com/ahtwr/cw/internal/task"
+	"github.com/ahtwr/iara/internal/config"
+	"github.com/ahtwr/iara/internal/project"
+	"github.com/ahtwr/iara/internal/task"
 )
 
 // Screen identifies a TUI screen.

@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"syscall"
 
-	"github.com/ahtwr/cw/internal/config"
+	"github.com/ahtwr/iara/internal/config"
 )
 
 type LaunchConfig struct {
@@ -25,20 +25,20 @@ type LaunchConfig struct {
 	NewSessionID        string   // pass --session-id <uuid> to force a specific ID for a new session
 	SkipPermissions     bool     // pass --dangerously-skip-permissions to claude
 	EditorMode          bool     // open WorkDir with $EDITOR instead of launching claude
-	AutoSetup           bool     // set CW_AUTO_SETUP=1 so skills know cw auto-invoked them
+	AutoSetup           bool     // set IARA_AUTO_SETUP=1 so skills know iara auto-invoked them
 	AutoCompactLimit    int      // 0=off, 40/50/60/70/80 — context % threshold for auto-compact
-	CWSessionID         string   // cw session ID (passed as env var for hooks)
+	IARASessionID         string   // iara session ID (passed as env var for hooks)
 	Print               bool     // run in non-interactive mode (-p): process prompt and exit
 	Quiet               bool     // suppress stdout (used during auto-compact)
-	YoloActive          bool     // set CW_YOLO_ACTIVE=1 for yolo autonomous execution
-	YoloPlanPath        string   // absolute path to yolo plan file (CW_YOLO_PLAN env var)
+	YoloActive          bool     // set IARA_YOLO_ACTIVE=1 for yolo autonomous execution
+	YoloPlanPath        string   // absolute path to yolo plan file (IARA_YOLO_PLAN env var)
 	LoadSubprojectRules bool     // when true, set CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1
-	TaskID              string   // task UUID (passed as CW_TASK_ID env var)
-	TaskName            string   // task name/slug (passed as CW_TASK_NAME env var)
+	TaskID              string   // task UUID (passed as IARA_TASK_ID env var)
+	TaskName            string   // task name/slug (passed as IARA_TASK_NAME env var)
 	SessionsDir         string   // full path to task-scoped sessions directory
 }
 
-// reloadRequested is set when SIGUSR1 is received from `cw internal reload`
+// reloadRequested is set when SIGUSR1 is received from `iara internal reload`
 var reloadRequested atomic.Bool
 
 // WasReload returns true if the last session ended due to a reload signal.
@@ -81,7 +81,7 @@ func Launch(cfg LaunchConfig) error {
 		args = append(args, "--add-dir", dir)
 	}
 
-	// Initial prompt as positional arg (e.g., /cw:new-intention for onboarding)
+	// Initial prompt as positional arg (e.g., /iara:new-intention for onboarding)
 	if cfg.Prompt != "" {
 		args = append(args, "--", cfg.Prompt)
 	}
@@ -95,40 +95,40 @@ func Launch(cfg LaunchConfig) error {
 	cmd := exec.Command("claude", args...)
 	cmd.Dir = cfg.WorkDir
 
-	// Pass CW_PID so `cw internal reload` can signal us
+	// Pass IARA_PID so `iara internal reload` can signal us
 	env := os.Environ()
-	env = append(env, fmt.Sprintf("CW_PID=%d", os.Getpid()))
+	env = append(env, fmt.Sprintf("IARA_PID=%d", os.Getpid()))
 	if cfg.ProjectName != "" {
-		env = append(env, fmt.Sprintf("CW_PROJECT_DIR=%s", cfg.WorkDir))
-		env = append(env, fmt.Sprintf("CW_PROJECT=%s", cfg.ProjectName))
+		env = append(env, fmt.Sprintf("IARA_PROJECT_DIR=%s", cfg.WorkDir))
+		env = append(env, fmt.Sprintf("IARA_PROJECT=%s", cfg.ProjectName))
 	}
 	if cfg.Mode.Name != "" {
-		env = append(env, fmt.Sprintf("CW_MODE=%s", cfg.Mode.Name))
+		env = append(env, fmt.Sprintf("IARA_MODE=%s", cfg.Mode.Name))
 	}
 	if cfg.AutoSetup {
-		env = append(env, "CW_AUTO_SETUP=1")
+		env = append(env, "IARA_AUTO_SETUP=1")
 	}
 	if cfg.AutoCompactLimit > 0 {
-		env = append(env, fmt.Sprintf("CW_AUTO_COMPACT_LIMIT=%d", cfg.AutoCompactLimit))
+		env = append(env, fmt.Sprintf("IARA_AUTO_COMPACT_LIMIT=%d", cfg.AutoCompactLimit))
 	}
-	if cfg.CWSessionID != "" {
-		env = append(env, fmt.Sprintf("CW_SESSION_ID=%s", cfg.CWSessionID))
+	if cfg.IARASessionID != "" {
+		env = append(env, fmt.Sprintf("IARA_SESSION_ID=%s", cfg.IARASessionID))
 	}
 	if cfg.YoloActive {
-		env = append(env, "CW_YOLO_ACTIVE=1")
+		env = append(env, "IARA_YOLO_ACTIVE=1")
 	}
 	if cfg.YoloPlanPath != "" {
-		env = append(env, fmt.Sprintf("CW_YOLO_PLAN=%s", cfg.YoloPlanPath))
+		env = append(env, fmt.Sprintf("IARA_YOLO_PLAN=%s", cfg.YoloPlanPath))
 	}
 	if cfg.TaskID != "" {
-		env = append(env, fmt.Sprintf("CW_TASK_ID=%s", cfg.TaskID))
+		env = append(env, fmt.Sprintf("IARA_TASK_ID=%s", cfg.TaskID))
 	}
 	if cfg.TaskName != "" {
-		env = append(env, fmt.Sprintf("CW_TASK_NAME=%s", cfg.TaskName))
+		env = append(env, fmt.Sprintf("IARA_TASK_NAME=%s", cfg.TaskName))
 	}
 	if cfg.SessionsDir != "" {
 		// Task base dir is parent of sessions dir — used for dev-config and logs
-		env = append(env, fmt.Sprintf("CW_TASK_DIR=%s", filepath.Dir(cfg.SessionsDir)))
+		env = append(env, fmt.Sprintf("IARA_TASK_DIR=%s", filepath.Dir(cfg.SessionsDir)))
 	}
 	if len(cfg.AddDirs) > 0 && cfg.LoadSubprojectRules {
 		env = append(env, "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1")

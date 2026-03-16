@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ahtwr/cw/internal/paths"
+	"github.com/ahtwr/iara/internal/paths"
 )
 
 type hookEntry struct {

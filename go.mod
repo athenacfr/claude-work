@@ -1,4 +1,4 @@
-module github.com/ahtwr/cw
+module github.com/ahtwr/iara
 
 go 1.24.2
 

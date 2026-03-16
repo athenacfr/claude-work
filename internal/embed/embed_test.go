@@ -83,8 +83,8 @@ func TestPluginJSONContent(t *testing.T) {
 		t.Error("plugin.json is empty")
 	}
 	// Should contain the plugin name
-	if !contains(content, "cw") {
-		t.Error("plugin.json should contain 'cw'")
+	if !contains(content, "iara") {
+		t.Error("plugin.json should contain 'iara'")
 	}
 }
 
@@ -92,7 +92,7 @@ func TestPluginJSONContent(t *testing.T) {
 
 func TestInstall(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("CW_DATA_DIR", tmp)
+	t.Setenv("IARA_DATA_DIR", tmp)
 
 	if err := Install(); err != nil {
 		t.Fatal(err)
@@ -151,7 +151,7 @@ func TestGeneratedCommandPlugins(t *testing.T) {
 
 	commandsDir := filepath.Join(tmp, "plugins", "commands")
 
-	// CLI commands should generate .md files with "cw internal" invocation
+	// CLI commands should generate .md files with "iara internal" invocation
 	cliGenerated := []string{"compact-and-continue.md"}
 	for _, name := range cliGenerated {
 		path := filepath.Join(commandsDir, name)
@@ -161,8 +161,8 @@ func TestGeneratedCommandPlugins(t *testing.T) {
 			continue
 		}
 		content := string(data)
-		if !contains(content, "cw internal") {
-			t.Errorf("%s should contain 'cw internal'", name)
+		if !contains(content, "iara internal") {
+			t.Errorf("%s should contain 'iara internal'", name)
 		}
 	}
 

@@ -1,4 +1,4 @@
-//# hash=e8575e6be2d55fdf7e69950193fcb92e
+//# hash=f0eddafb1d083c80a4d7452d50a46690
 //# sourceMappingURL=project-list.test.js.map
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -130,11 +130,11 @@ function _ts_generator(thisArg, body) {
     }
 }
 import { test, expect } from "@microsoft/tui-test";
-import { createTestEnv, CW_BIN, waitForReady } from "./helpers.js";
+import { createTestEnv, IARA_BIN, waitForReady } from "./helpers.js";
 var emptyEnv = createTestEnv();
 test.use({
     program: {
-        file: CW_BIN
+        file: IARA_BIN
     },
     rows: 24,
     columns: 80,

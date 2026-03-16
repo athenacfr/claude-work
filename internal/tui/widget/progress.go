@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ahtwr/cw/internal/git"
-	"github.com/ahtwr/cw/internal/tui/style"
+	"github.com/ahtwr/iara/internal/git"
+	"github.com/ahtwr/iara/internal/tui/style"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 )

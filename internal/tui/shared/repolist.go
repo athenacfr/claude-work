@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ahtwr/cw/internal/gh"
-	"github.com/ahtwr/cw/internal/git"
-	"github.com/ahtwr/cw/internal/tui/style"
-	"github.com/ahtwr/cw/internal/tui/widget"
+	"github.com/ahtwr/iara/internal/gh"
+	"github.com/ahtwr/iara/internal/git"
+	"github.com/ahtwr/iara/internal/tui/style"
+	"github.com/ahtwr/iara/internal/tui/widget"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

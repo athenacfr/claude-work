@@ -1,4 +1,4 @@
-//# hash=53013078a68e8fb9abfd5deee049158f
+//# hash=38b4ba20c602b02362afc39aae7cb727
 //# sourceMappingURL=mode-select.test.js.map
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -130,7 +130,7 @@ function _ts_generator(thisArg, body) {
     }
 }
 import { test, expect } from "@microsoft/tui-test";
-import { createTestEnv, createFakeProject, CW_BIN, waitForReady } from "./helpers.js";
+import { createTestEnv, createFakeProject, IARA_BIN, waitForReady } from "./helpers.js";
 var env = createTestEnv();
 createFakeProject(env.projectsDir, "mode-test-project", {
     repos: [
@@ -143,7 +143,7 @@ createFakeProject(env.projectsDir, "mode-test-project", {
 });
 test.use({
     program: {
-        file: CW_BIN
+        file: IARA_BIN
     },
     rows: 24,
     columns: 80,

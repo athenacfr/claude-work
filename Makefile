@@ -1,4 +1,4 @@
-BINARY      := cw
+BINARY      := iara
 UNAME_S     := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 INSTALL_DIR ?= /usr/local/bin
@@ -25,11 +25,11 @@ test:
 e2e: build
 	cd tests && bun install --frozen-lockfile 2>/dev/null || cd tests && bun install
 	cd tests && rm -rf .tui-test/cache
-	cd tests && CW_TEST_ROOT=$(CURDIR) bun run test
+	cd tests && IARA_TEST_ROOT=$(CURDIR) bun run test
 
 e2e-update: build
 	cd tests && bun install --frozen-lockfile 2>/dev/null || cd tests && bun install
 	cd tests && rm -rf .tui-test/cache
-	cd tests && CW_TEST_ROOT=$(CURDIR) npx tui-test --updateSnapshot
+	cd tests && IARA_TEST_ROOT=$(CURDIR) npx tui-test --updateSnapshot
 
 test-tui: e2e

@@ -48,10 +48,10 @@ func New(name, description, branch string) Task {
 
 // taskPath returns the path to a task's JSON file.
 func taskPath(projectDir, taskID string) string {
-	return filepath.Join(projectDir, ".cw", "tasks", taskID, "task.json")
+	return filepath.Join(projectDir, ".iara", "tasks", taskID, "task.json")
 }
 
-// Save writes the task to <projectDir>/.cw/tasks/<id>/task.json.
+// Save writes the task to <projectDir>/.iara/tasks/<id>/task.json.
 func Save(projectDir string, t Task) error {
 	dir := filepath.Dir(taskPath(projectDir, t.ID))
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -83,7 +83,7 @@ func Load(projectDir, taskID string) (Task, error) {
 // List returns all tasks in the project, sorted by LastActive descending.
 // The "default" directory is skipped.
 func List(projectDir string) ([]Task, error) {
-	tasksDir := filepath.Join(projectDir, ".cw", "tasks")
+	tasksDir := filepath.Join(projectDir, ".iara", "tasks")
 	entries, err := os.ReadDir(tasksDir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -137,17 +137,17 @@ func SetStatus(projectDir, taskID, status string) error {
 
 // SessionsDir returns the sessions directory for a task.
 func SessionsDir(projectDir, taskID string) string {
-	return filepath.Join(projectDir, ".cw", "tasks", taskID, "sessions")
+	return filepath.Join(projectDir, ".iara", "tasks", taskID, "sessions")
 }
 
 // DefaultSessionsDir returns the sessions directory for the default (non-task) context.
 func DefaultSessionsDir(projectDir string) string {
-	return filepath.Join(projectDir, ".cw", "tasks", "default", "sessions")
+	return filepath.Join(projectDir, ".iara", "tasks", "default", "sessions")
 }
 
 // TaskDir returns the directory for a task.
 func TaskDir(projectDir, taskID string) string {
-	return filepath.Join(projectDir, ".cw", "tasks", taskID)
+	return filepath.Join(projectDir, ".iara", "tasks", taskID)
 }
 
 // WorktreeBase returns the worktree base directory for a task.
@@ -155,10 +155,10 @@ func WorktreeBase(projectDir, taskSlug string) string {
 	return filepath.Join(projectDir, ".worktrees", taskSlug)
 }
 
-// MigrateSessionsIfNeeded moves legacy .cw/sessions/ to .cw/tasks/default/sessions/
+// MigrateSessionsIfNeeded moves legacy .iara/sessions/ to .iara/tasks/default/sessions/
 // if the old directory exists and the new one does not. This is a one-time migration.
 func MigrateSessionsIfNeeded(projectDir string) error {
-	oldDir := filepath.Join(projectDir, ".cw", "sessions")
+	oldDir := filepath.Join(projectDir, ".iara", "sessions")
 	newDir := DefaultSessionsDir(projectDir)
 
 	// Check if migration is needed

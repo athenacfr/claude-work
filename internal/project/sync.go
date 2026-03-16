@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ahtwr/cw/internal/paths"
+	"github.com/ahtwr/iara/internal/paths"
 )
 
 const commandHeader = `> **Repo: %s** — Run all operations for this command within the ` + "`%s/`" + ` directory.
@@ -15,7 +15,7 @@ const commandHeader = `> **Repo: %s** — Run all operations for this command wi
 
 // managedMarker identifies files created by SyncCommands so we can clean them up
 // without removing user-created commands.
-const managedMarker = "<!-- cw:synced -->\n"
+const managedMarker = "<!-- iara:synced -->\n"
 
 // SyncCommands copies each repo's .claude/commands/ files into the project's
 // .claude/commands/ directory. Each copied command is prefixed with a header

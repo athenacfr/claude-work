@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-// systemPromptTemplate is the static system prompt bundled with cw.
+// systemPromptTemplate is the static system prompt bundled with iara.
 // The only dynamic part is the subproject list, which is injected at launch time.
-const multiRepoTemplate = `# CW Project Context
+const multiRepoTemplate = `# IARA Project Context
 
-You are working in a cw-managed project directory with multiple independent git repos as subfolders.
+You are working in a iara-managed project directory with multiple independent git repos as subfolders.
 
 ## Repos
 
@@ -25,9 +25,9 @@ You are working in a cw-managed project directory with multiple independent git 
 - For cross-repo tasks: commit and test each repo independently. Change dependencies first. Use Agent tool for parallel work across repos.
 `
 
-const singleRepoTemplate = `# CW Project Context
+const singleRepoTemplate = `# IARA Project Context
 
-You are working in a cw-managed project directory with a single repository.
+You are working in a iara-managed project directory with a single repository.
 
 ## Repo
 

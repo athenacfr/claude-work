@@ -5,12 +5,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ahtwr/cw/internal/git"
-	"github.com/ahtwr/cw/internal/session"
-	"github.com/ahtwr/cw/internal/task"
-	"github.com/ahtwr/cw/internal/tui/shared"
-	"github.com/ahtwr/cw/internal/tui/style"
-	"github.com/ahtwr/cw/internal/tui/widget"
+	"github.com/ahtwr/iara/internal/git"
+	"github.com/ahtwr/iara/internal/session"
+	"github.com/ahtwr/iara/internal/task"
+	"github.com/ahtwr/iara/internal/tui/shared"
+	"github.com/ahtwr/iara/internal/tui/style"
+	"github.com/ahtwr/iara/internal/tui/widget"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

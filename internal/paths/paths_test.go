@@ -10,18 +10,18 @@ import (
 // --- DataDir ---
 
 func TestDataDirDefault(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "")
+	t.Setenv("IARA_DATA_DIR", "")
 	dir := DataDir()
 	if dir == "" {
 		t.Error("DataDir should not be empty")
 	}
-	if !strings.Contains(dir, "cw") {
-		t.Errorf("DataDir = %q, expected to contain 'cw'", dir)
+	if !strings.Contains(dir, "iara") {
+		t.Errorf("DataDir = %q, expected to contain 'iara'", dir)
 	}
 }
 
 func TestDataDirOverride(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "/custom/data")
+	t.Setenv("IARA_DATA_DIR", "/custom/data")
 	dir := DataDir()
 	if dir != "/custom/data" {
 		t.Errorf("DataDir = %q, want %q", dir, "/custom/data")
@@ -29,31 +29,31 @@ func TestDataDirOverride(t *testing.T) {
 }
 
 func TestDataDirXDG(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "")
+	t.Setenv("IARA_DATA_DIR", "")
 	t.Setenv("XDG_DATA_HOME", "/xdg/data")
 	dir := DataDir()
-	if dir != "/xdg/data/cw" {
-		t.Errorf("DataDir with XDG = %q, want %q", dir, "/xdg/data/cw")
+	if dir != "/xdg/data/iara" {
+		t.Errorf("DataDir with XDG = %q, want %q", dir, "/xdg/data/iara")
 	}
 }
 
 // --- ProjectsDir ---
 
 func TestProjectsDirDefault(t *testing.T) {
-	t.Setenv("CW_PROJECTS_DIR", "")
+	t.Setenv("IARA_PROJECTS_DIR", "")
 	dir := ProjectsDir()
 	if dir == "" {
 		t.Error("ProjectsDir should not be empty")
 	}
 	home, _ := os.UserHomeDir()
-	expected := filepath.Join(home, "cw", "projects")
+	expected := filepath.Join(home, "iara", "projects")
 	if dir != expected {
 		t.Errorf("ProjectsDir = %q, want %q", dir, expected)
 	}
 }
 
 func TestProjectsDirOverride(t *testing.T) {
-	t.Setenv("CW_PROJECTS_DIR", "/custom/projects")
+	t.Setenv("IARA_PROJECTS_DIR", "/custom/projects")
 	dir := ProjectsDir()
 	if dir != "/custom/projects" {
 		t.Errorf("ProjectsDir = %q, want %q", dir, "/custom/projects")
@@ -63,17 +63,17 @@ func TestProjectsDirOverride(t *testing.T) {
 // --- EnvsDir ---
 
 func TestEnvsDirDefault(t *testing.T) {
-	t.Setenv("CW_ENVS_DIR", "")
+	t.Setenv("IARA_ENVS_DIR", "")
 	dir := EnvsDir()
 	home, _ := os.UserHomeDir()
-	expected := filepath.Join(home, "cw", "envs")
+	expected := filepath.Join(home, "iara", "envs")
 	if dir != expected {
 		t.Errorf("EnvsDir = %q, want %q", dir, expected)
 	}
 }
 
 func TestEnvsDirOverride(t *testing.T) {
-	t.Setenv("CW_ENVS_DIR", "/custom/envs")
+	t.Setenv("IARA_ENVS_DIR", "/custom/envs")
 	dir := EnvsDir()
 	if dir != "/custom/envs" {
 		t.Errorf("EnvsDir = %q, want %q", dir, "/custom/envs")
@@ -83,7 +83,7 @@ func TestEnvsDirOverride(t *testing.T) {
 // --- BinDir ---
 
 func TestBinDirDefault(t *testing.T) {
-	t.Setenv("CW_BIN_DIR", "")
+	t.Setenv("IARA_BIN_DIR", "")
 	dir := BinDir()
 	if dir == "" {
 		t.Error("BinDir should not be empty")
@@ -91,7 +91,7 @@ func TestBinDirDefault(t *testing.T) {
 }
 
 func TestBinDirOverride(t *testing.T) {
-	t.Setenv("CW_BIN_DIR", "/custom/bin")
+	t.Setenv("IARA_BIN_DIR", "/custom/bin")
 	dir := BinDir()
 	if dir != "/custom/bin" {
 		t.Errorf("BinDir = %q, want %q", dir, "/custom/bin")
@@ -101,7 +101,7 @@ func TestBinDirOverride(t *testing.T) {
 // --- Sideband files ---
 
 func TestModeOverrideFile(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "/data")
+	t.Setenv("IARA_DATA_DIR", "/data")
 	got := ModeOverrideFile()
 	if got != "/data/mode-override" {
 		t.Errorf("ModeOverrideFile = %q, want %q", got, "/data/mode-override")
@@ -109,7 +109,7 @@ func TestModeOverrideFile(t *testing.T) {
 }
 
 func TestPermissionsOverrideFile(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "/data")
+	t.Setenv("IARA_DATA_DIR", "/data")
 	got := PermissionsOverrideFile()
 	if got != "/data/permissions-override" {
 		t.Errorf("PermissionsOverrideFile = %q, want %q", got, "/data/permissions-override")
@@ -117,7 +117,7 @@ func TestPermissionsOverrideFile(t *testing.T) {
 }
 
 func TestNewSessionFile(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "/data")
+	t.Setenv("IARA_DATA_DIR", "/data")
 	got := NewSessionFile()
 	if got != "/data/new-session" {
 		t.Errorf("NewSessionFile = %q, want %q", got, "/data/new-session")
@@ -125,7 +125,7 @@ func TestNewSessionFile(t *testing.T) {
 }
 
 func TestAutoCompactFile(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "/data")
+	t.Setenv("IARA_DATA_DIR", "/data")
 	got := AutoCompactFile()
 	if got != "/data/auto-compact" {
 		t.Errorf("AutoCompactFile = %q, want %q", got, "/data/auto-compact")
@@ -136,7 +136,7 @@ func TestAutoCompactFile(t *testing.T) {
 
 func TestEnsureProjectsDir(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("CW_PROJECTS_DIR", filepath.Join(tmp, "projects"))
+	t.Setenv("IARA_PROJECTS_DIR", filepath.Join(tmp, "projects"))
 
 	err := EnsureProjectsDir()
 	if err != nil {
@@ -154,7 +154,7 @@ func TestEnsureProjectsDir(t *testing.T) {
 
 func TestEnsureProjectsDirIdempotent(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("CW_PROJECTS_DIR", filepath.Join(tmp, "projects"))
+	t.Setenv("IARA_PROJECTS_DIR", filepath.Join(tmp, "projects"))
 
 	if err := EnsureProjectsDir(); err != nil {
 		t.Fatal(err)
@@ -167,7 +167,7 @@ func TestEnsureProjectsDirIdempotent(t *testing.T) {
 // --- CompactContextFile ---
 
 func TestCompactContextFile(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "/data")
+	t.Setenv("IARA_DATA_DIR", "/data")
 	got := CompactContextFile()
 	if got != "/data/compact-context" {
 		t.Errorf("CompactContextFile = %q, want %q", got, "/data/compact-context")
@@ -177,17 +177,17 @@ func TestCompactContextFile(t *testing.T) {
 // --- DataDir darwin branch (can't test on linux, but test XDG fallthrough) ---
 
 func TestDataDirNoXDG(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "")
+	t.Setenv("IARA_DATA_DIR", "")
 	t.Setenv("XDG_DATA_HOME", "")
 	dir := DataDir()
-	// On linux with no XDG, should fall through to ~/.local/share/cw
+	// On linux with no XDG, should fall through to ~/.local/share/iara
 	home, _ := os.UserHomeDir()
 	if dir == "" {
 		t.Error("DataDir should not be empty")
 	}
-	// Should end with /cw
-	if !strings.HasSuffix(dir, "/cw") {
-		t.Errorf("DataDir = %q, expected to end with /cw", dir)
+	// Should end with /iara
+	if !strings.HasSuffix(dir, "/iara") {
+		t.Errorf("DataDir = %q, expected to end with /iara", dir)
 	}
 	_ = home
 }
@@ -195,7 +195,7 @@ func TestDataDirNoXDG(t *testing.T) {
 // --- YoloActiveFile ---
 
 func TestYoloActiveFile(t *testing.T) {
-	t.Setenv("CW_DATA_DIR", "/data")
+	t.Setenv("IARA_DATA_DIR", "/data")
 	got := YoloActiveFile()
 	if got != "/data/yolo-active" {
 		t.Errorf("YoloActiveFile = %q, want %q", got, "/data/yolo-active")
@@ -205,7 +205,7 @@ func TestYoloActiveFile(t *testing.T) {
 // --- BinDir no override, no darwin ---
 
 func TestBinDirNoOverride(t *testing.T) {
-	t.Setenv("CW_BIN_DIR", "")
+	t.Setenv("IARA_BIN_DIR", "")
 	dir := BinDir()
 	if dir == "" {
 		t.Error("BinDir should not be empty")

@@ -12,7 +12,7 @@ The argument is: `$ARGUMENTS`
 
 ## Config File
 
-Dev commands are persisted at `$CW_TASK_DIR/dev-config.json`:
+Dev commands are persisted at `$IARA_TASK_DIR/dev-config.json`:
 
 ```json
 {
@@ -63,11 +63,11 @@ Dev commands are persisted at `$CW_TASK_DIR/dev-config.json`:
 - `port` (number) — the port this subproject's dev server listens on. Used for port conflict detection and env override updates.
 
 **Top-level optional field:**
-- `portBase` (number) — the base port for this project's port range. Each subproject gets ports offset from this base. This prevents port conflicts between different cw projects.
+- `portBase` (number) — the base port for this project's port range. Each subproject gets ports offset from this base. This prevents port conflicts between different iara projects.
 
 ## Port Allocation
 
-Each cw project gets a deterministic port range to avoid conflicts when multiple projects run simultaneously.
+Each iara project gets a deterministic port range to avoid conflicts when multiple projects run simultaneously.
 
 **Scheme:**
 - During first discovery, assign a `portBase` derived from a hash of the project name, mapped to a range (e.g. 3000-9999). Example: project "myapp" → portBase 4200.
@@ -105,31 +105,31 @@ Each cw project gets a deterministic port range to avoid conflicts when multiple
 
 #### If config exists — launch
 
-1. Read `$CW_TASK_DIR/dev-config.json`
+1. Read `$IARA_TASK_DIR/dev-config.json`
 2. **Port conflict check**: For each subproject with a `port` field, check if that port is already in use:
    ```bash
    lsof -i :<port> -sTCP:LISTEN -t 2>/dev/null
    ```
    If a port is occupied, warn the user and suggest an alternative port. If the user picks a different port, update the command accordingly (e.g. append `--port <new-port>`) and update the config file.
-3. **Env override sync**: For **every** subproject with a `port` field, check all env override files at `$CW_PROJECT_DIR/.env.<repo>.override` for variables whose values contain a port number that should match this subproject's configured port. Look for URL-shaped values (e.g. `http://localhost:<port>`) and bare port variables (e.g. `PORT=<port>`). Common variable names: `API_URL`, `BACKEND_URL`, `VITE_API_URL`, `PORT`, `NEXT_PUBLIC_API_URL`, `DATABASE_URL`. If any value references a different port than what's configured, update the override file so all subprojects connect to the right address. This runs on every launch, not just when ports change from conflicts. The env sync to `.env` files happens automatically via cw's file watcher — no manual sync step needed.
+3. **Env override sync**: For **every** subproject with a `port` field, check all env override files at `$IARA_PROJECT_DIR/.env.<repo>.override` for variables whose values contain a port number that should match this subproject's configured port. Look for URL-shaped values (e.g. `http://localhost:<port>`) and bare port variables (e.g. `PORT=<port>`). Common variable names: `API_URL`, `BACKEND_URL`, `VITE_API_URL`, `PORT`, `NEXT_PUBLIC_API_URL`, `DATABASE_URL`. If any value references a different port than what's configured, update the override file so all subprojects connect to the right address. This runs on every launch, not just when ports change from conflicts. The env sync to `.env` files happens automatically via iara's file watcher — no manual sync step needed.
 5. For each subproject, run one-shot commands first (sequentially, wait for each to complete). **Redirect output to log files**:
    - If the subproject has a `venv` field:
      ```bash
-     cd <project-dir>/<subproject-path> && source <venv>/bin/activate && <one-shot-cmd> >> "$CW_TASK_DIR/logs/<subproject>.log" 2>&1
+     cd <project-dir>/<subproject-path> && source <venv>/bin/activate && <one-shot-cmd> >> "$IARA_TASK_DIR/logs/<subproject>.log" 2>&1
      ```
    - Otherwise:
      ```bash
-     cd <project-dir>/<subproject-path> && <one-shot-cmd> >> "$CW_TASK_DIR/logs/<subproject>.log" 2>&1
+     cd <project-dir>/<subproject-path> && <one-shot-cmd> >> "$IARA_TASK_DIR/logs/<subproject>.log" 2>&1
      ```
    If a one-shot command fails (non-zero exit), read the last 20 lines of its log file to show the error, then ask if the user wants to continue or abort.
 6. Then launch all long-running commands in parallel using `run_in_background: true`. **Redirect all output to log files** so it doesn't accumulate in Claude's memory:
    - If the subproject has a `venv` field:
      ```bash
-     cd <project-dir>/<subproject-path> && source <venv>/bin/activate && <long-running-cmd> >> "$CW_TASK_DIR/logs/<subproject>.log" 2>&1
+     cd <project-dir>/<subproject-path> && source <venv>/bin/activate && <long-running-cmd> >> "$IARA_TASK_DIR/logs/<subproject>.log" 2>&1
      ```
    - Otherwise:
      ```bash
-     cd <project-dir>/<subproject-path> && <long-running-cmd> >> "$CW_TASK_DIR/logs/<subproject>.log" 2>&1
+     cd <project-dir>/<subproject-path> && <long-running-cmd> >> "$IARA_TASK_DIR/logs/<subproject>.log" 2>&1
      ```
 7. Display a summary table:
    ```
@@ -145,7 +145,7 @@ Each cw project gets a deterministic port range to avoid conflicts when multiple
      frontend  → http://localhost:5173
      backend   → http://localhost:8000
 
-   Logs: .cw/logs/frontend.log, .cw/logs/backend.log
+   Logs: .iara/logs/frontend.log, .iara/logs/backend.log
    Use /dev logs to view output, /dev status to check health.
    ```
 
@@ -183,20 +183,20 @@ Each cw project gets a deterministic port range to avoid conflicts when multiple
    - Change ports or venv paths
    - Skip a subproject
    ```
-5. If user confirms, write the config to `$CW_TASK_DIR/dev-config.json` and launch (go to "If config exists" flow)
+5. If user confirms, write the config to `$IARA_TASK_DIR/dev-config.json` and launch (go to "If config exists" flow)
 6. If user wants changes, adjust and confirm again
 
 ### /dev stop
 
 1. Stop all running background dev tasks using the TaskStop tool
-2. Confirm: "All dev commands stopped." (Log files persist at `.cw/logs/` — cw cleans them up automatically when the session ends.)
+2. Confirm: "All dev commands stopped." (Log files persist at `.iara/logs/` — iara cleans them up automatically when the session ends.)
 
 ### /dev restart
 
 1. Stop all running background dev tasks using the TaskStop tool
 2. Clear log files for a fresh start:
    ```bash
-   rm -f "$CW_TASK_DIR/logs/"*.log
+   rm -f "$IARA_TASK_DIR/logs/"*.log
    ```
 3. Re-launch everything from config — run the full "If config exists" flow (port conflict check, env override sync, one-shot commands, then long-running commands)
 4. Display the summary table and confirm: "Dev commands restarted."
@@ -205,7 +205,7 @@ Each cw project gets a deterministic port range to avoid conflicts when multiple
 
 Re-discover and merge changes into the existing config without losing manual edits.
 
-1. Read the existing config from `$CW_TASK_DIR/dev-config.json`
+1. Read the existing config from `$IARA_TASK_DIR/dev-config.json`
 2. Run the full discovery process (same as "If NO config exists" above)
 3. Diff the discovered config against the existing config and present changes using **AskUserQuestion**:
    ```
@@ -234,7 +234,7 @@ Re-discover and merge changes into the existing config without losing manual edi
    - Manual edits to commands, descriptions, and types
    - Custom `venv` paths and `port` assignments
    - The existing `portBase` (assign new subprojects the next available port in sequence)
-5. Write updated config to `$CW_TASK_DIR/dev-config.json`
+5. Write updated config to `$IARA_TASK_DIR/dev-config.json`
 6. If dev commands are currently running, ask: "Restart with updated config?"
 
 ### /dev status
@@ -251,7 +251,7 @@ Re-discover and merge changes into the existing config without losing manual edi
    ```
 3. For any failed or errored tasks, show the **last 10 lines** of the log file (not full output):
    ```bash
-   tail -n 10 "$CW_TASK_DIR/logs/<subproject>.log"
+   tail -n 10 "$IARA_TASK_DIR/logs/<subproject>.log"
    ```
 4. Ask if the user wants to restart failed commands
 5. Mention: "Use `/dev logs <subproject>` for more output."
@@ -265,9 +265,9 @@ Read dev server logs in controlled chunks to minimize token usage.
 3. If lines specified, override the default (e.g. `/dev logs backend 200`)
 4. Read logs using:
    ```bash
-   tail -n <lines> "$CW_TASK_DIR/logs/<subproject>.log"
+   tail -n <lines> "$IARA_TASK_DIR/logs/<subproject>.log"
    ```
-Note: Log file size is managed automatically by cw (truncated to last 5000 lines if exceeding 10MB). No need to handle this in the LLM.
+Note: Log file size is managed automatically by iara (truncated to last 5000 lines if exceeding 10MB). No need to handle this in the LLM.
 
 ## Error Handling
 
@@ -278,13 +278,13 @@ Note: Log file size is managed automatically by cw (truncated to last 5000 lines
 ## Important
 
 - Always `cd` to the subproject directory before running commands — never run from project root
-- Use absolute paths when constructing the `cd` path: `$CW_PROJECT_DIR/<subproject-path>`
+- Use absolute paths when constructing the `cd` path: `$IARA_PROJECT_DIR/<subproject-path>`
 - One-shot commands run sequentially and must complete before long-running commands start
 - Long-running commands all run in parallel as background tasks
 - The config file is the source of truth — always read it before launching
 - If the user modifies the config manually, respect those changes
 - When discovering commands, read actual file contents (package.json scripts, Makefile targets) — don't guess
 - **Python venv**: During discovery, check for `.venv/` or `venv/` directories. If found, set the `venv` field in config. Always activate the venv before running any Python subproject command — without it, commands will use the system Python and fail to find project dependencies.
-- **Port awareness**: During discovery, infer default ports from config files and command flags (e.g. `--port 8000`, Vite's default 5173, Django's default 8000). Store in the `port` field. Before launching, check for port conflicts — if multiple cw sessions or external processes occupy a port, choose an alternative and update env override files so cross-service references stay correct.
-- **Env override sync**: When a port changes, scan `$CW_PROJECT_DIR/.env.<repo>.override` files for URL or port variables referencing the old port and update them. This ensures that e.g. a frontend's `VITE_API_URL` points to the backend's actual running port.
-- **Log management**: All dev process output goes to `$CW_TASK_DIR/logs/<subproject>.log`. NEVER use TaskOutput to read full process output — always read log files with `tail` to control token usage. Log cleanup (deletion on session end, truncation of oversized files) is handled automatically by cw — do NOT run cleanup commands yourself.
+- **Port awareness**: During discovery, infer default ports from config files and command flags (e.g. `--port 8000`, Vite's default 5173, Django's default 8000). Store in the `port` field. Before launching, check for port conflicts — if multiple iara sessions or external processes occupy a port, choose an alternative and update env override files so cross-service references stay correct.
+- **Env override sync**: When a port changes, scan `$IARA_PROJECT_DIR/.env.<repo>.override` files for URL or port variables referencing the old port and update them. This ensures that e.g. a frontend's `VITE_API_URL` points to the backend's actual running port.
+- **Log management**: All dev process output goes to `$IARA_TASK_DIR/logs/<subproject>.log`. NEVER use TaskOutput to read full process output — always read log files with `tail` to control token usage. Log cleanup (deletion on session end, truncation of oversized files) is handled automatically by iara — do NOT run cleanup commands yourself.

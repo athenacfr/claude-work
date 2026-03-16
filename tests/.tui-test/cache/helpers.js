@@ -1,4 +1,4 @@
-//# hash=5bbb1055a4a471cdd88791a5ae71e587
+//# hash=c471c0068c807478380f842d9aee441e
 //# sourceMappingURL=helpers.js.map
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -129,7 +129,7 @@ function _ts_generator(thisArg, body) {
         };
     }
 }
-var _process_env_CW_TEST_ROOT;
+var _process_env_IARA_TEST_ROOT;
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -138,13 +138,13 @@ import { execSync } from "node:child_process";
 import { test, expect } from "@microsoft/tui-test";
 // tui-test compiles to a cache dir, so we resolve the binary path
 // relative to the project root using an env var or a known absolute path.
-var PROJECT_ROOT = (_process_env_CW_TEST_ROOT = process.env.CW_TEST_ROOT) !== null && _process_env_CW_TEST_ROOT !== void 0 ? _process_env_CW_TEST_ROOT : join(dirname(fileURLToPath(import.meta.url)), "..");
-// Resolved path to the cw binary (built by `make build` before tests run)
-export var CW_BIN = join(PROJECT_ROOT, "bin", "cw");
+var PROJECT_ROOT = (_process_env_IARA_TEST_ROOT = process.env.IARA_TEST_ROOT) !== null && _process_env_IARA_TEST_ROOT !== void 0 ? _process_env_IARA_TEST_ROOT : join(dirname(fileURLToPath(import.meta.url)), "..");
+// Resolved path to the iara binary (built by `make build` before tests run)
+export var IARA_BIN = join(PROJECT_ROOT, "bin", "iara");
 // Create an isolated temp environment for a test suite.
 // Returns paths and a cleanup function.
 export function createTestEnv() {
-    var root = mkdtempSync(join(tmpdir(), "cw-test-"));
+    var root = mkdtempSync(join(tmpdir(), "iara-test-"));
     var projectsDir = join(root, "projects");
     var dataDir = join(root, "data");
     mkdirSync(projectsDir, {
@@ -158,9 +158,9 @@ export function createTestEnv() {
         projectsDir: projectsDir,
         dataDir: dataDir,
         env: {
-            CW_PROJECTS_DIR: projectsDir,
-            CW_DATA_DIR: dataDir,
-            // Prevent cw from picking up real user config
+            IARA_PROJECTS_DIR: projectsDir,
+            IARA_DATA_DIR: dataDir,
+            // Prevent iara from picking up real user config
             HOME: root
         },
         cleanup: function cleanup() {
@@ -172,20 +172,20 @@ export function createTestEnv() {
     };
 }
 // Create a fake project inside the test env's projects dir.
-// Initializes a bare git repo so cw recognizes it.
+// Initializes a bare git repo so iara recognizes it.
 export function createFakeProject(projectsDir, name, opts) {
     var _ref;
     var projectDir = join(projectsDir, name);
     mkdirSync(projectDir, {
         recursive: true
     });
-    // Create .cw metadata dir
-    var cwDir = join(projectDir, ".cw");
-    mkdirSync(cwDir, {
+    // Create .iara metadata dir
+    var iaraDir = join(projectDir, ".iara");
+    mkdirSync(iaraDir, {
         recursive: true
     });
     if (opts === null || opts === void 0 ? void 0 : opts.metadata) {
-        writeFileSync(join(cwDir, "metadata.json"), JSON.stringify(opts.metadata, null, 2));
+        writeFileSync(join(iaraDir, "metadata.json"), JSON.stringify(opts.metadata, null, 2));
     }
     // Create repo subdirectories with git init
     var repos = (_ref = opts === null || opts === void 0 ? void 0 : opts.repos) !== null && _ref !== void 0 ? _ref : [
@@ -220,12 +220,12 @@ export function createFakeProject(projectsDir, name, opts) {
     }
     return projectDir;
 }
-// Configure tui-test to launch the cw binary with isolated env.
+// Configure tui-test to launch the iara binary with isolated env.
 // Call this at the top of each test file.
-export function useCw(env) {
+export function useIara(env) {
     test.use({
         program: {
-            file: CW_BIN
+            file: IARA_BIN
         },
         rows: 24,
         columns: 80,

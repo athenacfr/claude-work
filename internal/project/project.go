@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ahtwr/cw/internal/git"
-	"github.com/ahtwr/cw/internal/paths"
+	"github.com/ahtwr/iara/internal/git"
+	"github.com/ahtwr/iara/internal/paths"
 )
 
 type Repo struct {

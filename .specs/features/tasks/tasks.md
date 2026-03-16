@@ -44,13 +44,13 @@ T13 (cleanup) ── depends on all
 **What:**
 - Task struct: ID, Name, Description, Branch, Status, CreatedAt, LastActive
 - `New(name, description, branch) Task`
-- `Save(projectDir, t) error` — writes `.cw/tasks/<id>/task.json`
+- `Save(projectDir, t) error` — writes `.iara/tasks/<id>/task.json`
 - `Load(projectDir, taskID) (Task, error)`
 - `List(projectDir) ([]Task, error)` — reads all task.json files
 - `Touch(projectDir, taskID) error` — updates LastActive
 - `SetStatus(projectDir, taskID, status) error`
-- `SessionsDir(projectDir, taskID) string` — returns `.cw/tasks/<id>/sessions/`
-- `DefaultSessionsDir(projectDir) string` — returns `.cw/tasks/default/sessions/`
+- `SessionsDir(projectDir, taskID) string` — returns `.iara/tasks/<id>/sessions/`
+- `DefaultSessionsDir(projectDir) string` — returns `.iara/tasks/default/sessions/`
 - `WorktreeBase(projectDir, taskSlug) string` — returns `.worktrees/<slug>/`
 - `SetupWorktree(projectDir string, t Task, repoNames []string) error`:
   - `git worktree add` for each repo (uses git.WorktreeAdd)
@@ -113,8 +113,8 @@ T13 (cleanup) ── depends on all
 - Add `taskSelect screen.TaskSelectModel` to Model
 - `ProjectSelectedMsg` handler: navigate to `ScreenTaskSelect` (not launcher)
 - `TaskSelectedMsg` handler:
-  - If new task: set prompt `/cw:new-task`, quit
-  - If default + no metadata: set prompt `/cw:setup-project`, quit
+  - If new task: set prompt `/iara:new-task`, quit
+  - If default + no metadata: set prompt `/iara:setup-project`, quit
   - If default: navigate to launcher with default sessionsDir
   - If existing task: pull worktree repos, navigate to launcher with task sessionsDir
 - `NavigateMsg` handler: add `ScreenTaskSelect` case
@@ -139,27 +139,27 @@ T13 (cleanup) ── depends on all
 
 ---
 
-### T9: `/cw:new-task` skill
+### T9: `/iara:new-task` skill
 **Files:** `internal/commands/commands.go` (plugin body)
 **What:**
-- Adapt from `/cw:new-intention` plugin body
+- Adapt from `/iara:new-intention` plugin body
 - Map codebase (autonomous)
 - Ask intent, confirm description
 - Propose branch name, confirm
-- Call `cw internal save-task '<json>'` (creates task + worktrees + CLAUDE.md)
+- Call `iara internal save-task '<json>'` (creates task + worktrees + CLAUDE.md)
 - Save project metadata if first task
-- Call `cw internal new-session` to reload into worktree
+- Call `iara internal new-session` to reload into worktree
 **Depends on:** T4, T8
 **Verify:** Manual e2e — create a new task, verify worktree, CLAUDE.md, sessions
 
 ---
 
-### T10: `/cw:finish-task` skill
+### T10: `/iara:finish-task` skill
 **Files:** `internal/commands/commands.go` (plugin body)
 **What:**
 - Check dirty files across worktree repos
 - Confirm with user
-- Call `cw internal finish-task`
+- Call `iara internal finish-task`
 - Signal reload to return to task selection
 **Depends on:** T4, T8
 **Verify:** Manual e2e — finish a task, verify worktree removed, branch persists
@@ -170,8 +170,8 @@ T13 (cleanup) ── depends on all
 **Files:** `internal/task/migrate.go`
 **What:**
 - `MigrateSessionsIfNeeded(projectDir string) error`
-- If `.cw/sessions/` exists and `.cw/tasks/default/sessions/` does not:
-  - Move `.cw/sessions/` → `.cw/tasks/default/sessions/`
+- If `.iara/sessions/` exists and `.iara/tasks/default/sessions/` does not:
+  - Move `.iara/sessions/` → `.iara/tasks/default/sessions/`
 - Called once on task list load
 **Depends on:** T3
 **Verify:** Unit test — create legacy sessions, verify migration
@@ -206,8 +206,8 @@ T13 (cleanup) ── depends on all
 **Files:** `internal/commands/commands.go`, `internal/tui/app.go`
 **What:**
 - Remove `new-intention` command from registry
-- Remove auto-launch `/cw:new-intention` from app.go
-- Replace with `/cw:setup-project` auto-launch for projects without metadata
+- Remove auto-launch `/iara:new-intention` from app.go
+- Replace with `/iara:setup-project` auto-launch for projects without metadata
 - Verify embed cleanup removes stale `new-intention.md` plugin
 **Depends on:** T12
 **Verify:** `go test ./...`, `make build`, verify old plugin file removed

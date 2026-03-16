@@ -1,5 +1,5 @@
 import { test, expect } from "@microsoft/tui-test";
-import { createTestEnv, createFakeProject, CW_BIN, waitForReady } from "./helpers.js";
+import { createTestEnv, createFakeProject, IARA_BIN, waitForReady } from "./helpers.js";
 
 const env = createTestEnv();
 createFakeProject(env.projectsDir, "edit-target", {
@@ -8,7 +8,7 @@ createFakeProject(env.projectsDir, "edit-target", {
 });
 
 test.use({
-  program: { file: CW_BIN },
+  program: { file: IARA_BIN },
   rows: 24,
   columns: 80,
   env: env.env,

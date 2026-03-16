@@ -16,7 +16,7 @@ func init() {
 
 	Register(Command{
 		Name:        "reload",
-		Description: "Reload the cw session to pick up new commands, rules, and config changes.",
+		Description: "Reload the iara session to pick up new commands, rules, and config changes.",
 		CLICommand:  "reload",
 		Internal:    true,
 	})
@@ -53,7 +53,7 @@ func init() {
 
 	Register(Command{
 		Name:        "save-metadata",
-		Description: "Save project metadata (title, description, instructions) for the current cw project.",
+		Description: "Save project metadata (title, description, instructions) for the current iara project.",
 		CLICommand:  "save-metadata",
 		Internal:    true,
 		Params: map[string]ParamDef{
@@ -79,7 +79,7 @@ func init() {
 
 	Register(Command{
 		Name:        "help",
-		Description: "Show all cw commands and modes available inside Claude.",
+		Description: "Show all iara commands and modes available inside Claude.",
 	})
 
 	Register(Command{
@@ -113,7 +113,7 @@ func init() {
 
 	Register(Command{
 		Name:        "setup-project",
-		Description: "Map the codebase and save project metadata for a new cw project.",
+		Description: "Map the codebase and save project metadata for a new iara project.",
 	})
 
 	Register(Command{

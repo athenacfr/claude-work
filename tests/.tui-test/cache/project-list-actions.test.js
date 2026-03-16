@@ -1,4 +1,4 @@
-//# hash=90fa28f2a1f15b9ff39eeac8c26954c9
+//# hash=e2db9bfb40f843709fa614cb8c9a82ea
 //# sourceMappingURL=project-list-actions.test.js.map
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
@@ -130,7 +130,7 @@ function _ts_generator(thisArg, body) {
     }
 }
 import { test, expect } from "@microsoft/tui-test";
-import { createTestEnv, createFakeProject, CW_BIN, waitForReady } from "./helpers.js";
+import { createTestEnv, createFakeProject, IARA_BIN, waitForReady } from "./helpers.js";
 var env = createTestEnv();
 createFakeProject(env.projectsDir, "action-project", {
     repos: [
@@ -143,7 +143,7 @@ createFakeProject(env.projectsDir, "action-project", {
 });
 test.use({
     program: {
-        file: CW_BIN
+        file: IARA_BIN
     },
     rows: 24,
     columns: 80,

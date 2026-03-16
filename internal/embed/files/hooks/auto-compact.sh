@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Auto-compact hook: reads token usage from the Claude session JSONL
-# and triggers compact when context usage exceeds CW_AUTO_COMPACT_LIMIT%.
+# and triggers compact when context usage exceeds IARA_AUTO_COMPACT_LIMIT%.
 
-LIMIT="${CW_AUTO_COMPACT_LIMIT:-0}"
+LIMIT="${IARA_AUTO_COMPACT_LIMIT:-0}"
 [ "$LIMIT" -eq 0 ] 2>/dev/null && exit 0
 
 # Read hook input to get session_id
@@ -11,7 +11,7 @@ SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // empty' 2>/dev/null)
 [ -z "$SESSION_ID" ] && exit 0
 
 # Derive JSONL path: ~/.claude/projects/{encoded_cwd}/{session_id}.jsonl
-PROJECT_DIR="${CW_PROJECT_DIR:-}"
+PROJECT_DIR="${IARA_PROJECT_DIR:-}"
 [ -z "$PROJECT_DIR" ] && exit 0
 
 ENCODED_DIR=$(printf '%s' "$PROJECT_DIR" | sed 's|/|-|g')
@@ -45,7 +45,7 @@ esac
 PCT=$(( (TOTAL * 100) / CONTEXT_WINDOW ))
 
 if [ "$PCT" -ge "$LIMIT" ]; then
-  cw internal auto-compact &
+  iara internal auto-compact &
 fi
 
 exit 0

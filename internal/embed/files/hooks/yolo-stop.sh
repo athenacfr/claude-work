@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Stop hook for yolo mode. Prevents Claude from exiting during autonomous execution.
-# Only active when CW_YOLO_ACTIVE=1 — does nothing in normal sessions.
+# Only active when IARA_YOLO_ACTIVE=1 — does nothing in normal sessions.
 
-[ "$CW_YOLO_ACTIVE" != "1" ] && exit 0
+[ "$IARA_YOLO_ACTIVE" != "1" ] && exit 0
 
 # Consume stdin (hook input JSON)
 cat > /dev/null
 
-PLAN="${CW_YOLO_PLAN:-}"
+PLAN="${IARA_YOLO_PLAN:-}"
 [ -z "$PLAN" ] && exit 0
 [ ! -f "$PLAN" ] && exit 0
 

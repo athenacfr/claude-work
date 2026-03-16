@@ -18,7 +18,7 @@ The argument is: `$ARGUMENTS`
 - Use the argument as the objective
 
 **If no argument** (`/yolo`):
-1. Check for an existing plan file by running: `ls $CW_PROJECT_DIR/.cw/yolo/plan-*.md 2>/dev/null` using the Bash tool
+1. Check for an existing plan file by running: `ls $IARA_PROJECT_DIR/.iara/yolo/plan-*.md 2>/dev/null` using the Bash tool
    - **If plan exists**: Use AskUserQuestion to ask: "Active yolo plan found. Resume execution or re-plan?"
      - Resume → skip to Step 5 (start executing)
      - Re-plan → continue to Step 2
@@ -37,10 +37,10 @@ The argument is: `$ARGUMENTS`
 Create the directory and write the plan:
 
 ```bash
-mkdir -p "$CW_PROJECT_DIR/.cw/yolo"
+mkdir -p "$IARA_PROJECT_DIR/.iara/yolo"
 ```
 
-Then write the plan file to `$CW_PROJECT_DIR/.cw/yolo/plan-$CW_SESSION_ID.md` using the Write tool.
+Then write the plan file to `$IARA_PROJECT_DIR/.iara/yolo/plan-$IARA_SESSION_ID.md` using the Write tool.
 
 Plan format:
 
@@ -69,7 +69,7 @@ Use AskUserQuestion to show:
 
 Ask: **"Ready to start yolo?"**
 
-- **Yes** → run `cw internal yolo-start` using the Bash tool, then continue to Step 5
+- **Yes** → run `iara internal yolo-start` using the Bash tool, then continue to Step 5
 - **No** → refine the plan based on feedback, update the plan file, and ask again
 
 ### Step 5: Execute
@@ -94,7 +94,7 @@ You can add, modify, reorder, or remove tasks as you learn things. Add notes to 
 
 **Agents:** Use the Agent tool for parallel or focused work — researcher for exploration, tester for tests, implementer for independent subtasks.
 
-**When ALL tasks are done:** Run `cw internal yolo-stop` using the Bash tool. Do NOT call yolo-stop until every task is done.
+**When ALL tasks are done:** Run `iara internal yolo-stop` using the Bash tool. Do NOT call yolo-stop until every task is done.
 
 ## Important
 
