@@ -87,11 +87,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if key.Matches(msg, style.GlobalKeys.Quit) {
-			if m.screen == screenProjectWizard {
-				m.projectWizard.CleanupIfNeeded()
+			if m.screen == screenProjectExplorer {
+				m.launchConfig.WorkDir = ""
+				return m, tea.Quit
 			}
-			m.launchConfig.WorkDir = ""
-			return m, tea.Quit
+			// Treat ctrl+c as escape on non-main screens
+			msg = tea.KeyMsg(tea.Key{Type: tea.KeyEscape})
 		}
 
 	case shared.RepoSelectedMsg:

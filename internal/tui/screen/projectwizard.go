@@ -209,6 +209,7 @@ func (m ProjectWizardModel) updateName(msg tea.KeyMsg) (ProjectWizardModel, tea.
 		m.methodList = m.buildMethodList()
 		return m, nil
 	case "esc":
+		m.CleanupIfNeeded()
 		return m, func() tea.Msg { return shared.NavigateMsg{Screen: shared.ScreenProjectExplorer} }
 	default:
 		var cmd tea.Cmd
