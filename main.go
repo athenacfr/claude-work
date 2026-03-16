@@ -346,15 +346,6 @@ func main() {
 			}
 			session.RunSummarize(os.Args[3], os.Args[4], os.Args[5])
 			return
-		case "open-project":
-			dir := os.Getenv("CW_PROJECT_DIR")
-			if dir == "" {
-				fmt.Fprintln(os.Stderr, "CW_PROJECT_DIR not set — not running inside cw")
-				os.Exit(1)
-			}
-			go openFolder(dir)
-			time.Sleep(500 * time.Millisecond)
-			return
 		case "save-metadata":
 			if len(os.Args) < 4 {
 				fmt.Fprintln(os.Stderr, "usage: cw internal save-metadata '<json>'")

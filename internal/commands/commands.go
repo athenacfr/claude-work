@@ -11,18 +11,14 @@ func init() {
 		Name:        "new-session",
 		Description: "Close the current session and start a fresh one with updated configuration.",
 		CLICommand:  "new-session",
+		Internal:    true,
 	})
 
 	Register(Command{
 		Name:        "reload",
 		Description: "Reload the cw session to pick up new commands, rules, and config changes.",
 		CLICommand:  "reload",
-	})
-
-	Register(Command{
-		Name:        "open-project",
-		Description: "Open the project root directory in the system editor or file explorer.",
-		CLICommand:  "open-project",
+		Internal:    true,
 	})
 
 	Register(Command{
@@ -232,9 +228,6 @@ CW Commands
 /permissions <value>    Switch permissions (bypass, normal)
 
 /cw:compact-and-continue  Compact context and continue where you left off
-/cw:new-session         Start a fresh session
-/cw:reload              Reload session (picks up new commands, rules, and config)
-/cw:open-project        Open project folder in editor
 /cw-help                Show this help
 
 Current Session
@@ -713,7 +706,7 @@ Each cw project gets a deterministic port range to avoid conflicts when multiple
    lsof -i :<port> -sTCP:LISTEN -t 2>/dev/null
    ` + "```" + `
    If a port is occupied, warn the user and suggest an alternative port. If the user picks a different port, update the command accordingly (e.g. append ` + "`--port <new-port>`" + `) and update the config file.
-3. **Env override sync**: If any port was changed from the config default, check the env override files at ` + "`$CW_PROJECT_DIR/.env.<repo>.override`" + ` for variables that reference the old port (e.g. ` + "`API_URL`" + `, ` + "`BACKEND_URL`" + `, ` + "`VITE_API_URL`" + `, ` + "`PORT`" + `, ` + "`NEXT_PUBLIC_API_URL`" + `). Update them to the new port so other subprojects connect to the right address.
+3. **Env override sync**: For **every** subproject with a ` + "`port`" + ` field, check all env override files at ` + "`$CW_PROJECT_DIR/.env.<repo>.override`" + ` for variables whose values contain a port number that should match this subproject's configured port. Look for URL-shaped values (e.g. ` + "`http://localhost:<port>`" + `) and bare port variables (e.g. ` + "`PORT=<port>`" + `). Common variable names: ` + "`API_URL`" + `, ` + "`BACKEND_URL`" + `, ` + "`VITE_API_URL`" + `, ` + "`PORT`" + `, ` + "`NEXT_PUBLIC_API_URL`" + `, ` + "`DATABASE_URL`" + `. If any value references a different port than what's configured, update the override file so all subprojects connect to the right address. This runs on every launch, not just when ports change from conflicts. The env sync to ` + "`.env`" + ` files happens automatically via cw's file watcher — no manual sync step needed.
 5. For each subproject, run one-shot commands first (sequentially, wait for each to complete). **Redirect output to log files**:
    - If the subproject has a ` + "`venv`" + ` field:
      ` + "```bash" + `

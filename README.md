@@ -1,21 +1,26 @@
 # cw
 
-A multi-repo project manager for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Organize multiple git repositories into projects, pick a mode, and launch Claude with the right context.
+**Stop copy-pasting context into Claude Code.** cw sets up the right project, the right repos, the right mode, and the right session — then launches Claude with everything it needs to be useful from the first message.
 
-## Features
+If you work across multiple repos, juggle different tasks in parallel, or find yourself re-explaining your codebase every time you start a new Claude session, cw fixes that.
 
-- **Multi-repo projects** — group related repos into a single workspace
-- **Modes** — launch Claude in different behavioral modes (code, research, review, plan, tdd, debug, free)
-- **Fuzzy search** — fzf-style navigation for projects, repos, and modes
-- **GitHub integration** — clone repos directly from GitHub via `gh` CLI
-- **Auto-context** — injects project structure and rules into Claude's system prompt
-- **Permissions toggle** — choose whether to bypass Claude Code's permission prompts
-- **Git worktrees** — manage worktrees from inside Claude sessions
-- **Background pulls** — repos are pulled in parallel on project launch
+## The problem
 
-## Install
+Claude Code is powerful, but it starts every session blank. You `cd` into a directory, launch it, and spend the first few messages explaining what you're working on, which repos matter, and how things fit together. If you're working on multiple things, you're constantly context-switching — and so is Claude.
 
-Requires Go 1.24+ and [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed.
+## What cw does
+
+cw sits between you and Claude Code. It manages **projects** (groups of repos), **tasks** (isolated branches with their own session history), and **modes** (behavioral presets like code, research, or review). You pick what you're working on from a fast TUI, and Claude launches already knowing the full picture.
+
+```
+you → cw (pick project, task, mode) → Claude Code (with full context)
+```
+
+No setup prompts. No re-explaining. Just start working.
+
+## Quick start
+
+Requires Go 1.24+ and [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
 ```sh
 git clone https://github.com/ahtwr/cw.git
@@ -23,54 +28,90 @@ cd cw
 make install
 ```
 
-This installs the `cw` binary to `~/.local/bin/cw`.
-
-## Usage
+Then run:
 
 ```sh
 cw
 ```
 
-This opens the TUI. From there:
+## Why cw
 
-1. **Create a project** — press `n`, give it a name, and add repos (from GitHub, git URL, local path, or init empty)
-2. **Select a project** — navigate with `j`/`k`, press `enter`
-3. **Pick a mode** — choose how Claude should behave, toggle permissions with `tab`, press `enter`
-4. Claude launches in your project directory with full context
+### Work across multiple repos
 
-### Modes
+Real projects span multiple repositories — backend, frontend, shared libraries, infra. cw groups them into a single project so Claude sees everything, not just the directory you happened to `cd` into.
 
-| Mode | Description |
-|------|-------------|
-| `code` | Write features, fix bugs (default) |
-| `research` | Explore codebase, read-only |
-| `review` | Review code changes |
-| `plan` | Plan before building |
-| `tdd` | Test-driven development |
-| `debug` | Investigate issues |
-| `free` | No preset behavior |
+### Parallel tasks without conflicts
 
-### In-session commands
+Every task gets its own **git worktree branch**. Work on a feature in one task, a bugfix in another — each with isolated branches and their own session history. No stashing, no branch juggling. When a task is done, its worktree is cleaned up automatically.
 
-Once inside Claude, these slash commands are available:
+### Sessions that remember
+
+Start a Claude session, close it, come back later — cw tracks your session history per task. Resume exactly where you left off, or start fresh. Your context carries over.
+
+### Modes set the tone
+
+Instead of telling Claude "act as a code reviewer" every time, pick the `review` mode once. Modes shape Claude's behavior for the entire session:
+
+| Mode       | What Claude does                      |
+| ---------- | ------------------------------------- |
+| `code`     | Writes features, fixes bugs (default) |
+| `research` | Explores the codebase, read-only      |
+| `review`   | Reviews code changes                  |
+| `none`     | No preset — do whatever you want      |
+
+Switch modes mid-session with `/mode research` without restarting.
+
+### Dev servers, managed
+
+Type `/dev` inside Claude and it auto-discovers dev commands in your repos (`package.json` scripts, `Makefile` targets, `Cargo.toml`, etc.), assigns deterministic ports, and runs them in the background. No more "what port was that on?" — it's the same every time.
+
+### Go autonomous when you want
+
+`/yolo` lets Claude plan and execute a full objective autonomously — map the codebase, break the work into tasks, and execute without stopping to ask at every step. It's opt-in, explicit, and useful for well-scoped work you trust Claude to handle.
+
+## Commands inside Claude
+
+Once you're in a Claude session, these slash commands extend what you can do without leaving:
+
+| Command                         | What it does                          |
+| ------------------------------- | ------------------------------------- |
+| `/mode [name]`                  | Show or switch behavioral mode        |
+| `/permissions [bypass\|normal]` | Toggle Claude's permission prompts    |
+| `/dev`                          | Start dev servers and watchers        |
+| `/dev stop`                     | Stop all dev servers                  |
+| `/yolo [objective]`             | Autonomous plan-and-execute           |
+| `/new-task`                     | Create a new task with its own branch |
+| `/finish-task`                  | Complete task, clean up worktrees     |
+| `/cw:compact-and-continue`      | Compact context and keep working      |
+| `/cw:new-session`               | Start a fresh session                 |
+| `/cw:reload`                    | Reload config and commands            |
+| `/cw:help`                      | Show all available commands           |
+
+## How it works
 
 ```
-/mode [name]              Show or switch mode
-/cw [list|create|remove]  Manage git worktrees
-/cw:help                  Show all commands
+~/cw/projects/my-app/
+├── backend/              ← git repo
+├── frontend/             ← git repo
+├── .worktrees/
+│   └── fix-auth/         ← isolated worktree for a task
+│       ├── backend/
+│       └── frontend/
+├── .cw/
+│   ├── metadata.json     ← project title, description, instructions
+│   └── tasks/
+│       └── <id>/
+│           ├── task.json
+│           └── sessions/ ← session history for this task
+└── CLAUDE.md             ← auto-generated project context
 ```
 
-## Project structure
+Projects live under `~/cw/projects/`. Each project contains repos as subdirectories, task worktrees for isolated branches, and metadata that cw injects into Claude's system prompt on every launch.
 
-Each project lives under `~/.local/share/cw/projects/<name>/` and contains:
+## Environment variables
 
-- One or more git repos as subdirectories
-- A `CLAUDE.md` with project-wide instructions (auto-generated on first launch)
-
-## Configuration
-
-| Env var | Description |
-|---------|-------------|
+| Variable          | Description                             |
+| ----------------- | --------------------------------------- |
 | `CW_PROJECTS_DIR` | Override the default projects directory |
 
 ## Uninstall
@@ -79,4 +120,4 @@ Each project lives under `~/.local/share/cw/projects/<name>/` and contains:
 cw uninstall
 ```
 
-Removes the binary and all data from `~/.local/share/cw/`.
+Removes the binary and all project data.
