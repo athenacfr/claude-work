@@ -21,6 +21,7 @@ Dev commands are persisted at `$IARA_TASK_DIR/dev-config.json`:
     {
       "path": "frontend",
       "port": 4200,
+      "dependsOn": ["backend"],
       "commands": [
         {
           "cmd": "npm run generate:types",
@@ -69,12 +70,13 @@ In this example:
 **Command fields:**
 
 - `type` — `one-shot` (runs once: codegen, migrations) or `long-running` (continuous: dev servers, watchers)
-- `priority` (number) — execution order. Commands with the same priority run in parallel; lower priorities run first. Example: migrations at priority 0 complete before dev servers at priority 1 start.
+- `priority` (number) — execution order. Commands with the same priority run in parallel; lower priorities run first. Example: migrations at priority 0 complete before dev servers at priority 1 start. **The supervisor waits for long-running services with ports to be healthy (TCP port accepting connections) before advancing to the next priority group.** This means "start API at priority 1, run codegen at priority 2" works correctly — codegen only runs after the API is actually ready, not just spawned.
 
 **Optional fields per subproject:**
 
 - `venv` (string) — path to a Python virtual environment relative to the subproject root. When set, commands are prefixed with `source <venv>/bin/activate &&`.
 - `port` (number) — the port this subproject's dev server listens on.
+- `dependsOn` (string array) — paths of other subprojects this one depends on. Used to track inter-project dependencies and ensure env vars point to the correct local ports.
 
 ## Process
 
@@ -123,7 +125,19 @@ The command outputs a summary table with status and URLs when ready.
    - **Priority 3**: Services that depend on generated output (e.g., frontend dev server needing generated types)
    - Use your judgement — trace the dependency chain and assign increasing priorities accordingly.
 5. Compute a `portBase` from the project name (hash mod 5000 + 3000, range 3000-7999). Assign sequential ports to subprojects with long-running dev servers. Modify commands to use the assigned port.
-6. Present the discovered config to the user using **AskUserQuestion**:
+6. **Detect inter-project dependencies:**
+   - For each subproject, look for env vars or config files that reference other subprojects:
+     - Read `.env.*.override` and `.env.*.global` files at the project root (`$IARA_PROJECT_DIR`)
+     - Read config files like `orval.config.ts`, `codegen.ts`, `openapi-generator` configs that reference URLs via env vars
+     - Look for env var names containing another subproject's name (e.g., `ORVAL_LEXFLOW_URL` when `lexflow-api` is a subproject)
+   - For each detected dependency:
+     - Set `dependsOn` in the dependent subproject (e.g., `"dependsOn": ["lexflow-api"]`)
+     - Ensure the dependency's long-running server has a lower priority than the dependent's commands
+     - Check if the env var's port matches the assigned port — if not, note it for the env override step
+   - After port assignment, propose updates to `.env.*.override` for any stale dependency ports:
+     - Show: which file, which var, old value → new value
+     - **ALWAYS confirm with the user via AskUserQuestion before modifying any `.env.*.override` file**
+7. Present the discovered config to the user using **AskUserQuestion**:
 
    ```
    Discovered dev commands:
@@ -143,7 +157,7 @@ The command outputs a summary table with status and URLs when ready.
    - Skip a subproject
    ```
 
-7. If user confirms, write the config to `$IARA_TASK_DIR/dev-config.json` and launch via `iara internal dev-launch`
+8. If user confirms, write the config to `$IARA_TASK_DIR/dev-config.json` and launch via `iara internal dev-launch`
 
 **Port flag conventions by stack:**
 
@@ -175,11 +189,12 @@ Stops all running dev commands, clears log files, and re-launches everything fro
 Re-discover and merge changes into the existing config.
 
 1. Read the existing config from `$IARA_TASK_DIR/dev-config.json`
-2. Run the full discovery process (same as first run)
+2. Run the full discovery process (same as first run, including dependency detection)
 3. Diff the discovered config against the existing and present changes using **AskUserQuestion**
 4. Merge accepted changes, preserving manual edits and existing ports
 5. Write updated config
-6. If dev commands are running, ask: "Restart with updated config?"
+6. Check dependency env vars against assigned ports — if any are stale, propose updates to `.env.*.override` (confirm with AskUserQuestion)
+7. If dev commands are running, ask: "Restart with updated config?"
 
 ### /dev status
 
@@ -203,6 +218,7 @@ Default: last 50 lines per subproject.
 
 ## Error Handling
 
+- **A single command failing does NOT stop the rest.** The supervisor logs warnings for failed commands and continues starting the remaining services. After startup, it reports how many warnings occurred.
 - When a background task notification arrives (the dev-launch process exited), run `iara internal dev-status` to check what happened. Offer to restart failed services.
 - If the config file is malformed, show the error and offer to re-discover.
 

@@ -3,6 +3,7 @@ package dev
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -67,7 +68,9 @@ func Launch(taskDir, projectDir string) error {
 
 	// Group by priority and execute each group.
 	// Commands with the same priority run in parallel; groups run sequentially.
+	// A command failure logs a warning but does NOT cancel the rest.
 	var tracked []trackedProcess
+	var warnings []string
 	for len(entries) > 0 {
 		prio := entries[0].cmd.Priority
 		// Collect all entries at this priority level.
@@ -100,10 +103,11 @@ func Launch(taskDir, projectDir string) error {
 				}(i, e)
 			}
 			wg.Wait()
-			for _, err := range errs {
+			for i, err := range errs {
 				if err != nil {
-					killAll(tracked)
-					return err
+					w := fmt.Sprintf("Warning: [%s] %s failed: %v", oneShots[i].sp.Path, oneShots[i].cmd.Cmd, err)
+					fmt.Println(w)
+					warnings = append(warnings, w)
 				}
 			}
 		}
@@ -112,11 +116,40 @@ func Launch(taskDir, projectDir string) error {
 		for _, e := range longRunning {
 			tp, err := startLongRunning(projectDir, logDir, e.sp, e.cmd)
 			if err != nil {
-				killAll(tracked)
-				return fmt.Errorf("start %s/%s: %w", e.sp.Path, e.cmd.Cmd, err)
+				w := fmt.Sprintf("Warning: failed to start [%s] %s: %v", e.sp.Path, e.cmd.Cmd, err)
+				fmt.Println(w)
+				warnings = append(warnings, w)
+				continue
 			}
 			tracked = append(tracked, tp)
 		}
+
+		// Wait for long-running services with ports to be ready before next group.
+		for _, e := range longRunning {
+			if e.sp.Port <= 0 {
+				continue
+			}
+			// Find the tracked process for this entry.
+			var proc *os.Process
+			for _, tp := range tracked {
+				if tp.subproject == e.sp.Path && tp.port == e.sp.Port {
+					proc = tp.process
+					break
+				}
+			}
+			if proc == nil {
+				continue // failed to start, already warned
+			}
+			if err := waitForPort(e.sp.Port, proc, 30*time.Second); err != nil {
+				w := fmt.Sprintf("Warning: [%s] not ready on port %d: %v", e.sp.Path, e.sp.Port, err)
+				fmt.Println(w)
+				warnings = append(warnings, w)
+			}
+		}
+	}
+
+	if len(warnings) > 0 {
+		fmt.Printf("\n%d warning(s) during startup (see above)\n", len(warnings))
 	}
 
 	// Write PID file.
@@ -127,7 +160,7 @@ func Launch(taskDir, projectDir string) error {
 	}
 
 	// Build and write initial status.
-	status := buildStatus(myPID, cfg, tracked)
+	status := buildStatus(myPID, cfg, tracked, warnings)
 	if err := writeStatus(taskDir, status); err != nil {
 		killAll(tracked)
 		return fmt.Errorf("write status: %w", err)
@@ -261,24 +294,42 @@ func startLongRunning(projectDir, logDir string, sp *Subproject, cmd Command) (t
 }
 
 // buildStatus constructs the Status struct from the current state.
-func buildStatus(supervisorPID int, cfg *Config, tracked []trackedProcess) *Status {
+func buildStatus(supervisorPID int, cfg *Config, tracked []trackedProcess, warnings []string) *Status {
 	s := &Status{
 		PID:     supervisorPID,
 		Started: time.Now().Format(time.RFC3339),
 	}
 
-	// Add one-shot commands as completed.
+	// Build a set of failed commands from warnings for quick lookup.
+	failedCmds := make(map[string]bool)
+	for _, w := range warnings {
+		// Warnings follow the format "Warning: [path] cmd failed: ..."
+		// Mark any one-shot whose path appears in a warning as failed.
+		for _, sp := range cfg.Subprojects {
+			for _, cmd := range sp.Commands {
+				if cmd.Type == "one-shot" && strings.Contains(w, "["+sp.Path+"]") && strings.Contains(w, cmd.Cmd) {
+					failedCmds[sp.Path+"/"+cmd.Cmd] = true
+				}
+			}
+		}
+	}
+
+	// Add one-shot commands with their actual status.
 	for _, sp := range cfg.Subprojects {
 		for _, cmd := range sp.Commands {
 			if cmd.Type != "one-shot" {
 				continue
+			}
+			st := "completed"
+			if failedCmds[sp.Path+"/"+cmd.Cmd] {
+				st = "failed"
 			}
 			s.Processes = append(s.Processes, ProcessStatus{
 				Subproject: sp.Path,
 				Cmd:        cmd.Cmd,
 				Type:       cmd.Type,
 				Port:       sp.Port,
-				Status:     "completed",
+				Status:     st,
 			})
 		}
 	}
@@ -469,6 +520,32 @@ func terminateAll(tracked []trackedProcess) {
 			syscall.Kill(-tp.process.Pid, syscall.SIGKILL)
 		}
 	}
+}
+
+// waitForPort tries to connect to a TCP port in a loop until success or timeout.
+// If proc is provided, it checks whether the process is still alive between attempts.
+func waitForPort(port int, proc *os.Process, timeout time.Duration) error {
+	addr := fmt.Sprintf("localhost:%d", port)
+	fmt.Printf("Waiting for port %d ... ", port)
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		// Check if the process is still alive.
+		if proc != nil {
+			if err := syscall.Kill(proc.Pid, 0); err != nil {
+				fmt.Println("PROCESS EXITED")
+				return fmt.Errorf("process exited before port %d became ready (check logs)", port)
+			}
+		}
+		conn, err := net.DialTimeout("tcp", addr, 500*time.Millisecond)
+		if err == nil {
+			conn.Close()
+			fmt.Println("OK")
+			return nil
+		}
+		time.Sleep(300 * time.Millisecond)
+	}
+	fmt.Println("TIMEOUT")
+	return fmt.Errorf("port %d not ready after %s", port, timeout)
 }
 
 // printLogTail prints the last n lines of a log file.

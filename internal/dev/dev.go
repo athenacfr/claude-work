@@ -19,10 +19,11 @@ type Config struct {
 
 // Subproject defines a subproject with its path, optional port/venv, and commands.
 type Subproject struct {
-	Path     string    `json:"path"`
-	Port     int       `json:"port,omitempty"`
-	Venv     string    `json:"venv,omitempty"`
-	Commands []Command `json:"commands"`
+	Path      string    `json:"path"`
+	Port      int       `json:"port,omitempty"`
+	Venv      string    `json:"venv,omitempty"`
+	DependsOn []string  `json:"dependsOn,omitempty"`
+	Commands  []Command `json:"commands"`
 }
 
 // Command defines a single command to run within a subproject.

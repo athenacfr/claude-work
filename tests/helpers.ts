@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, utimesSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -71,6 +71,15 @@ export function createFakeProject(
   return projectDir;
 }
 
+// Touch project directories so "opened just now" stays fresh across retries.
+// Call this in test.beforeEach() for tests with snapshot assertions that include timestamps.
+export function touchProjectDirs(...dirs: string[]) {
+  const now = new Date();
+  for (const dir of dirs) {
+    utimesSync(dir, now, now);
+  }
+}
+
 // Configure tui-test to launch the iara binary with isolated env.
 // Call this at the top of each test file.
 export function useIara(env: Record<string, string | undefined>) {
@@ -85,6 +94,10 @@ export function useIara(env: Record<string, string | undefined>) {
 // Wait for the TUI to be fully rendered by checking for the footer bar.
 // The footer (permissions/compact) is the last thing rendered, so its presence
 // indicates the full TUI frame has been drawn.
-export async function waitForReady(terminal: any) {
+// Optionally touches project directories to keep "opened just now" fresh.
+export async function waitForReady(terminal: any, projectDirs?: string[]) {
+  if (projectDirs) {
+    touchProjectDirs(...projectDirs);
+  }
   await expect(terminal.getByText(/permissions/g)).toBeVisible();
 }

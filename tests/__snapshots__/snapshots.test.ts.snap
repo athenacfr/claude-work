@@ -87,35 +87,6 @@ exports[`Snapshots › mode select initial render | 1`] = String.raw`
 ╰────────────────────────────────────────────────────────────────────────────────╯
 `;
 
-exports[`Snapshots › project list initial render | 1`] = String.raw`
-╭────────────────────────────────────────────────────────────────────────────────╮
-│                                                                                │
-│┌──────────────────────────────┐│ snap-project                                  │
-││ search...                    ││ opened just now                               │
-│└──────────────────────────────┘│                                               │
-│▶ 1. snap-project  2 repos      │ Snap Project                                  │
-│[toggle rename delete]          │                                               │
-│  2. + new project              │ For snapshot tests                            │
-│                                │                                               │
-│                                │   api on detached ✓                           │
-│                                │                                               │
-│                                │   web on detached ✓                           │
-│                                │                                               │
-│                                │                                               │
-│                                │                                               │
-│                                │                                               │
-│                                │                                               │
-│                                │                                               │
-│                                │                                               │
-│                                │                                               │
-│                                │                                               │
-│                                                                                │
-│                                                                                │
-│                                                                                │
-│permissions  bypass    compact  off    , settings                               │
-╰────────────────────────────────────────────────────────────────────────────────╯
-`;
-
 exports[`Snapshots › project list with expanded repos | 1`] = String.raw`
 ╭────────────────────────────────────────────────────────────────────────────────╮
 │PROJECTS                                                                        │
