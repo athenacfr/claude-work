@@ -2,7 +2,6 @@
 
 exports[`Project List — navigation › collapses repos by toggling t | 1`] = String.raw`
 ╭────────────────────────────────────────────────────────────────────────────────╮
-│PROJECTS                                                                        │
 │                                                                                │
 │┌──────────────────────────────┐│ alpha-project                                 │
 ││ search...                    ││ opened just now                               │
@@ -14,6 +13,7 @@ exports[`Project List — navigation › collapses repos by toggling t | 1`] = S
 │                                │   backend on detached ✓                       │
 │                                │                                               │
 │                                │   frontend on detached ✓                      │
+│                                │                                               │
 │                                │                                               │
 │                                │                                               │
 │                                │                                               │

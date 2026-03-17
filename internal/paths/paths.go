@@ -94,6 +94,12 @@ func TaskSwitchFile() string {
 	return filepath.Join(DataDir(), "task-switch")
 }
 
+// ExitToTUIFile returns the path to the sideband file that signals the reload
+// loop to exit back to the TUI instead of relaunching Claude.
+func ExitToTUIFile() string {
+	return filepath.Join(DataDir(), "exit-to-tui")
+}
+
 // BinDir returns the directory where the iara binary is installed.
 // Override with IARA_BIN_DIR env var.
 // Defaults: macOS /usr/local/bin, Linux/WSL ~/.local/bin

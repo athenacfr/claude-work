@@ -209,6 +209,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case shared.NavigateMsg:
 		switch msg.Screen {
 		case shared.ScreenProjectExplorer:
+			m.launchConfig.WorkDir = ""
 			m.screen = screenProjectExplorer
 			m.projectExplorer = screen.NewProjectExplorerModel()
 			m.projectExplorer.SetSize(m.width, m.height)

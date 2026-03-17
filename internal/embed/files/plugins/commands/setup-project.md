@@ -46,7 +46,7 @@ Check:
 echo $IARA_AUTO_SETUP
 ```
 
-- If `1`: Say "Project set up! Starting fresh session..." then run `iara internal new-session`
+- If `1`: Say "Project set up!" then run `iara internal exit-to-tui`
 - Otherwise: Say "Project set up! Reloading..." then run `iara internal reload`
 
 ## Important

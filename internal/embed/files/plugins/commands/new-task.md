@@ -84,7 +84,7 @@ Check how this command was invoked:
 echo $IARA_AUTO_SETUP
 ```
 
-- If `1`: Say "All set! Starting fresh session..." then run `iara internal new-session`
+- If `1`: Say "All set!" then run `iara internal exit-to-tui`
 - Otherwise: Say "All set! Reloading session..." then run `iara internal reload`
 
 ## Important
